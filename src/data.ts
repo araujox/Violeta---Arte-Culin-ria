@@ -1,9 +1,14 @@
 import { MenuItem, Testimonial, Table } from './types';
 
-export const HERO_IMG = '/src/assets/images/viva_veneto_hero_1779295871073.png';
-export const RISOTTO_IMG = '/src/assets/images/viva_veneto_risotto_1779295890719.png';
-export const WINE_IMG = '/src/assets/images/viva_veneto_wine_1779295907745.png';
-export const DESSERT_IMG = '/src/assets/images/viva_veneto_dessert_1779295926956.png';
+import heroImg from './assets/images/viva_veneto_hero_1779295871073.png';
+import risottoImg from './assets/images/viva_veneto_risotto_1779295890719.png';
+import wineImg from './assets/images/viva_veneto_wine_1779295907745.png';
+import dessertImg from './assets/images/viva_veneto_dessert_1779295926956.png';
+
+export const HERO_IMG = heroImg;
+export const RISOTTO_IMG = risottoImg;
+export const WINE_IMG = wineImg;
+export const DESSERT_IMG = dessertImg;
 
 export const VIOLETA_MENU: MenuItem[] = [
   {
