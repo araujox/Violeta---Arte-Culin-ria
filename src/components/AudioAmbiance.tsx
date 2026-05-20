@@ -37,63 +37,92 @@ export default function AudioAmbiance({ onNotify }: AudioAmbianceProps) {
         masterGain.connect(ctx.destination);
         gainNodeRef.current = masterGain;
 
-        // Violeta sound theme: soothing minor acoustic chord, warm organ swells
-        const osc1 = ctx.createOscillator();
-        const oscGain1 = ctx.createGain();
-        osc1.type = 'triangle';
-        osc1.frequency.setValueAtTime(65.41, ctx.currentTime); // C2 (deep cello root)
-        oscGain1.gain.setValueAtTime(0.25, ctx.currentTime);
-        
-        const osc2 = ctx.createOscillator();
-        const oscGain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(130.81, ctx.currentTime); // C3
-        oscGain2.gain.setValueAtTime(0.15, ctx.currentTime);
+        // Extremely soft and warm background pad (pure sines, incredibly quiet, no hum/buzz)
+        const pad1 = ctx.createOscillator();
+        const padGain1 = ctx.createGain();
+        pad1.type = 'sine';
+        pad1.frequency.setValueAtTime(130.81, ctx.currentTime); // C3
+        padGain1.gain.setValueAtTime(0.04, ctx.currentTime);
+        pad1.connect(padGain1);
+        padGain1.connect(masterGain);
+        pad1.start();
 
-        const osc3 = ctx.createOscillator();
-        const oscGain3 = ctx.createGain();
-        osc3.type = 'sine';
-        osc3.frequency.setValueAtTime(155.56, ctx.currentTime); // D#3 / Eb3 (minor third for mystic tone)
-        oscGain3.gain.setValueAtTime(0.12, ctx.currentTime);
+        const pad2 = ctx.createOscillator();
+        const padGain2 = ctx.createGain();
+        pad2.type = 'sine';
+        pad2.frequency.setValueAtTime(196.00, ctx.currentTime); // G3 (perfect fifth)
+        padGain2.gain.setValueAtTime(0.03, ctx.currentTime);
+        pad2.connect(padGain2);
+        padGain2.connect(masterGain);
+        pad2.start();
 
-        const osc4 = ctx.createOscillator();
-        const oscGain4 = ctx.createGain();
-        osc4.type = 'sine';
-        osc4.frequency.setValueAtTime(196.00, ctx.currentTime); // G3 (perfect fifth)
-        oscGain4.gain.setValueAtTime(0.1, ctx.currentTime);
+        // 16-step elegant cinematic melody in C Minor (harmonized)
+        const melodySteps = [
+          { m: 523.25, h: 261.63 }, // C5 + C4
+          { m: 0,      h: 0 },
+          { m: 622.25, h: 311.13 }, // Eb5 + Eb4
+          { m: 587.33, h: 0 },      // D5
+          { m: 392.00, h: 196.00 }, // G4 + G3
+          { m: 0,      h: 0 },
+          { m: 466.16, h: 233.08 }, // Bb4 + Bb3
+          { m: 523.25, h: 0 },      // C5
+          { m: 783.99, h: 392.00 }, // G5 + G4
+          { m: 0,      h: 0 },
+          { m: 622.25, h: 311.13 }, // Eb5 + Eb4
+          { m: 932.33, h: 0 },      // Bb5
+          { m: 783.99, h: 523.25 }, // G5 + C5
+          { m: 0,      h: 0 },
+          { m: 587.33, h: 293.66 }, // D5 + D4
+          { m: 466.16, h: 0 }       // Bb4
+        ];
 
-        osc1.connect(oscGain1);
-        oscGain1.connect(masterGain);
-        
-        osc2.connect(oscGain2);
-        oscGain2.connect(masterGain);
+        // Function to synthesize a single beautiful crystal-clear organic bell note
+        const playBellNode = (freq: number, velocity: number = 0.08, duration: number = 2.8) => {
+          if (!audioCtxRef.current) return;
+          const currentCtx = audioCtxRef.current;
+          
+          const oscNode = currentCtx.createOscillator();
+          const noteGainNode = currentCtx.createGain();
+          
+          // Pure sine wave for crystal clear glass bell chime timbre (zero buzz/ruído)
+          oscNode.type = 'sine';
+          oscNode.frequency.setValueAtTime(freq, currentCtx.currentTime);
+          
+          noteGainNode.gain.setValueAtTime(0, currentCtx.currentTime);
+          // Very rapid beautiful attack
+          noteGainNode.gain.linearRampToValueAtTime(velocity, currentCtx.currentTime + 0.012);
+          // Smooth bell decay
+          noteGainNode.gain.exponentialRampToValueAtTime(0.0001, currentCtx.currentTime + duration);
+          
+          oscNode.connect(noteGainNode);
+          noteGainNode.connect(masterGain);
+          
+          oscNode.start(currentCtx.currentTime);
+          oscNode.stop(currentCtx.currentTime + duration + 0.2);
+        };
 
-        osc3.connect(oscGain3);
-        oscGain3.connect(masterGain);
+        // Trigger first note immediately
+        playBellNode(523.25, 0.08, 2.8);
+        playBellNode(261.63, 0.04, 2.8);
 
-        osc4.connect(oscGain4);
-        oscGain4.connect(masterGain);
-
-        osc1.start();
-        osc2.start();
-        osc3.start();
-        osc4.start();
-
-        let shift = 0;
+        let currentStep = 1;
         const intervalId = window.setInterval(() => {
           if (!audioCtxRef.current) return;
-          const time = audioCtxRef.current.currentTime;
-          const currentSwell = 0.12 + Math.sin(shift) * 0.04;
-          oscGain2.gain.setTargetAtTime(currentSwell, time, 1.8);
-          // Subtle pitch vibrato for organic feeling
-          osc1.frequency.setTargetAtTime(65.41 + Math.sin(shift) * 0.2, time, 2.0);
-          osc3.frequency.setTargetAtTime(155.56 + Math.cos(shift) * 0.3, time, 2.0);
-          shift += 0.4;
-        }, 2500);
+          
+          const step = melodySteps[currentStep];
+          if (step.m > 0) {
+            playBellNode(step.m, 0.08, 2.8);
+          }
+          if (step.h > 0) {
+            playBellNode(step.h, 0.03, 3.2); // Harmony note is slightly softer and decays longer
+          }
+          
+          currentStep = (currentStep + 1) % melodySteps.length;
+        }, 1400); // 1.4 seconds per step for a relaxed, breathing tempo
 
         oscillatorIntervalRef.current = intervalId;
         setIsPlayingAudio(true);
-        onNotify("Som ambiente sintonizado. Sinta as ondas instrumentais do Violeta.");
+        onNotify("Harmonias de piano de cristal e sinos ativadas. Desfrute da melodia do Violeta.");
       } else {
         if (oscillatorIntervalRef.current) {
           clearInterval(oscillatorIntervalRef.current);
