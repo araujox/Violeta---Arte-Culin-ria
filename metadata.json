@@ -1,0 +1,6 @@
+{
+  "name": "Violeta - Arte Culinária",
+  "description": "Premium contemporary artistic-culinary experience in Surubim-PE, inspired by high-end luxury design, featuring tables map, real reviews, and refined WhatsApp reservation integrated flows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", "Playfair Display", serif;
+  --font-sans: "Montserrat", sans-serif;
+  --font-display: "Playfair Display", serif;
+
+  --color-gold-50: #fbf8f1;
+  --color-gold-100: #f4edd9;
+  --color-gold-200: #e8dbb0;
+  --color-gold-300: #d6b265;
+  --color-gold-400: #c5a85c;
+  --color-gold-500: #b89047;
+  --color-gold-600: #937134;
+  --color-gold-700: #715324;
+  --color-gold-800: #513918;
+  --color-gold-900: #34230e;
+
+  --color-bronze-300: #a8947d;
+  --color-bronze-400: #8c7862;
+  --color-bronze-500: #715e49;
+  
+  --color-violeta-wine: #3d071d;
+  --color-violeta-dark: #19010a;
+  --color-violeta-deep: #120107;
+  --color-violeta-mid: #2a0413;
+  --color-violeta-bright: #5c0f30;
+  
+  --color-obsidian-950: #050505;
+  --color-obsidian-900: #0d0d0d;
+  --color-obsidian-800: #141414;
+  --color-obsidian-700: #1d1d1d;
+  --color-obsidian-600: #262626;
+  
+  --animate-fade-in: fade-in 0.8s ease-out forwards;
+  --animate-slide-up: slide-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Hide Scrollbar for premium carousel/sliders */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Luxury border overlay */
+.gold-gradient-border {
+  border: 1px solid transparent;
+  background-image: linear-gradient(#0c0c0c, #0c0c0c), linear-gradient(135deg, #c5a85c, #513918 50%, #141414);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px rgba(197, 168, 92, 0.08);
+}
+
+.gold-glow-hover:hover {
+  box-shadow: 0 0 25px rgba(197, 168, 92, 0.15);
+}
+
+/* Soft transition */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
