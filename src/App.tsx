@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, Wine, BookOpen, Award, Star, 
-  MapPin, Heart, ChevronRight, MessageSquare, Instagram, ExternalLink 
+  MapPin, Heart, ChevronRight, MessageSquare, Instagram, ExternalLink, Lock 
 } from 'lucide-react';
 
-import { MenuItem } from './types';
+import { MenuItem, EventBistro, HeroBanner, WhatsAppConfig } from './types';
 import { VIOLETA_MENU, HERO_IMG } from './data';
 
 import AudioAmbiance from './components/AudioAmbiance';
 import ReservationForm from './components/ReservationForm';
 import ReviewSection from './components/ReviewSection';
 import MapsSection from './components/MapsSection';
+
+import { 
+  loadEvents, saveEvents, 
+  loadHero, saveHero, 
+  loadWhatsApp, saveWhatsApp,
+  loadRomanticTheme, saveRomanticTheme
+} from './utils/adminStorage';
+import EventsSection from './components/EventsSection';
+import AdminPanel from './components/AdminPanel';
+import RomanticPopup from './components/RomanticPopup';
 
 export function VioletaLogo({ className = "w-6 h-6", strokeWidth = 2.2 }: { className?: string; strokeWidth?: number }) {
   return (
@@ -96,12 +106,145 @@ export function VioletaLogo({ className = "w-6 h-6", strokeWidth = 2.2 }: { clas
   );
 }
 
+function HeartRain() {
+  const [hearts, setHearts] = useState<{ id: number; left: number; delay: number; size: number; duration: number }[]>([]);
+
+  useEffect(() => {
+    const heartList = Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      delay: Math.random() * 8,
+      size: 8 + Math.random() * 14,
+      duration: 8 + Math.random() * 12,
+    }));
+    setHearts(heartList);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden select-none">
+      <style>{`
+        @keyframes heartFall {
+          0% {
+            transform: translateY(-5vh) rotate(0deg) scale(0.5);
+            opacity: 0;
+          }
+          15% {
+            opacity: 0.5;
+          }
+          90% {
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateY(105vh) rotate(320deg) scale(1);
+            opacity: 0;
+          }
+        }
+        .animate-heart-fall {
+          animation: heartFall linear infinite;
+        }
+      `}</style>
+      {hearts.map((h) => (
+        <Heart 
+          key={h.id}
+          className="absolute text-red-500/25 fill-red-500/15 animate-heart-fall"
+          style={{
+            left: `${h.left}%`,
+            width: `${h.size}px`,
+            height: `${h.size}px`,
+            animationDelay: `${h.delay}s`,
+            animationDuration: `${h.duration}s`,
+            top: `-20px`
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FixedCupid({ position }: { position: 'left' | 'right' | 'top-right' }) {
+  const [hovered, setHovered] = useState(false);
+  const posClasses = {
+    'left': 'left-6 bottom-24',
+    'right': 'right-6 bottom-24',
+    'top-right': 'right-6 top-24'
+  };
+
+  return (
+    <div 
+      className={`fixed ${posClasses[position] || 'right-6 bottom-24'} z-40 bg-[#150508]/90 p-2.5 rounded-full border border-red-500/20 shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      title="Cupido Violeta"
+    >
+      {hovered && (
+        <div className="absolute right-full mr-3 bg-[#0d0406] border border-red-500/20 text-[10px] text-red-300 px-3 py-1.5 rounded-lg whitespace-nowrap animate-slide-left tracking-wide font-sans italic shadow-lg">
+          Celebre o amor no Violeta! 🌹
+        </div>
+      )}
+      <svg viewBox="0 0 100 100" className="w-9 h-9 animate-bounce" style={{ animationDuration: '4s' }}>
+        {/* Simple wings */}
+        <path d="M 35,45 C 10,30 5,60 35,55 Z" fill="#fbcfe8" className="opacity-80 animate-pulse" />
+        <path d="M 65,45 C 90,30 95,60 65,55 Z" fill="#fbcfe8" className="opacity-80 animate-pulse" />
+        {/* Bow and Arrow */}
+        <path d="M 40,40 L 60,60" stroke="#fbcfe8" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M 45,60 L 40,65 L 35,60 Z" fill="#ef4444" />
+        {/* Head and Halo */}
+        <circle cx="50" cy="35" r="8" fill="#fbcfe8" />
+        <circle cx="50" cy="22" r="10" fill="none" stroke="#f0abfc" strokeWidth="1.5" className="animate-pulse" />
+        {/* Body heart */}
+        <path d="M 50,60 C 45,52 35,48 35,40 C 35,32 45,32 50,38 C 55,32 65,32 65,40 C 65,48 55,52 50,60 Z" fill="#ef4444" className="scale-75 origin-center translate-y-3" />
+      </svg>
+    </div>
+  );
+}
+
 export default function App() {
   const [activeMenuTab, setActiveMenuTab] = useState<'entradas' | 'principais' | 'drinks' | 'sobremesas'>('principais');
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
   
   // Custom global notification banners
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Persistent customizable states
+  const [events, setEvents] = useState<EventBistro[]>(() => loadEvents());
+  const [hero, setHero] = useState<HeroBanner>(() => loadHero());
+  const [whatsAppConfig, setWhatsAppConfig] = useState<WhatsAppConfig>(() => loadWhatsApp());
+  const [romanticTheme, setRomanticTheme] = useState(() => loadRomanticTheme());
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+
+  // Monitor location hashes for hidden navigation entries
+  useEffect(() => {
+    const handleLocationHash = () => {
+      const hash = window.location.hash;
+      if (hash === '#painel-bistro' || hash === '#admin-eventos' || hash === '#gestao-bistro') {
+        setIsAdminOpen(true);
+      }
+    };
+
+    handleLocationHash();
+    window.addEventListener('hashchange', handleLocationHash);
+    return () => window.removeEventListener('hashchange', handleLocationHash);
+  }, []);
+
+  const handleSaveEvents = (newEvents: EventBistro[]) => {
+    setEvents(newEvents);
+    saveEvents(newEvents);
+  };
+
+  const handleSaveHero = (newHero: HeroBanner) => {
+    setHero(newHero);
+    saveHero(newHero);
+  };
+
+  const handleSaveWhatsApp = (newConfig: WhatsAppConfig) => {
+    setWhatsAppConfig(newConfig);
+    saveWhatsApp(newConfig);
+  };
+
+  const handleSaveRomanticTheme = (newConfig: any) => {
+    setRomanticTheme(newConfig);
+    saveRomanticTheme(newConfig);
+  };
 
   const triggerNotification = (text: string) => {
     setNotification(text);
@@ -117,8 +260,30 @@ export default function App() {
     }
   };
 
+  const isRomanticCampaignActive = (() => {
+    if (!romanticTheme || !romanticTheme.active) return false;
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const { startDate, endDate } = romanticTheme;
+    
+    if (startDate && todayStr < startDate) return false;
+    if (endDate && todayStr > endDate) return false;
+    
+    return true;
+  })();
+
+  const currentHeroTitle = (isRomanticCampaignActive && romanticTheme?.bannerRomanticTitle) 
+    ? romanticTheme.bannerRomanticTitle 
+    : hero.title;
+
+  const currentHeroSubtitle = (isRomanticCampaignActive && romanticTheme?.bannerRomanticSlogan) 
+    ? romanticTheme.bannerRomanticSlogan 
+    : hero.subtitle;
+
   return (
-    <div className="min-h-screen bg-violeta-deep text-[#ECE6D9] font-sans antialiased selection:bg-violeta-bright/40 selection:text-gold-100">
+    <div className={`min-h-screen text-[#ECE6D9] font-sans antialiased selection:bg-violeta-bright/40 selection:text-gold-100 ${
+      isRomanticCampaignActive ? 'bg-[#090405] theme-romantic' : 'bg-violeta-deep'
+    }`}>
       
       {/* Premium Ambient Notification Display */}
       {notification && (
@@ -145,6 +310,9 @@ export default function App() {
           <nav className="hidden md:flex gap-8 text-xs uppercase tracking-widest text-[#B5AE9E]">
             <button onClick={() => scrollToId('experiencia')} className="hover:text-gold-300 transition-colors cursor-pointer">L'Espresso</button>
             <button onClick={() => scrollToId('menu')} className="hover:text-gold-300 transition-colors cursor-pointer">Il Cardápio</button>
+            {events.some(evt => evt.active) && (
+              <button onClick={() => scrollToId('eventos')} className="hover:text-gold-300 transition-colors cursor-pointer text-gold-200">Próximos Eventos</button>
+            )}
             <button onClick={() => scrollToId('booking')} className="hover:text-gold-300 transition-colors cursor-pointer">Tabelas & Reservas</button>
             <button onClick={() => scrollToId('avaliacoes')} className="hover:text-gold-300 transition-colors cursor-pointer">Avaliações</button>
             <button onClick={() => scrollToId('localizacao')} className="hover:text-gold-300 transition-colors cursor-pointer">Como Chegar</button>
@@ -168,7 +336,7 @@ export default function App() {
         {/* Generated premium high-end table image decoration */}
         <div className="absolute inset-0 z-0 opacity-30">
           <img 
-            src={HERO_IMG} 
+            src={hero.image} 
             alt="Violeta Interior Atmospheric View" 
             className="w-full h-full object-cover scale-105"
             referrerPolicy="no-referrer"
@@ -183,18 +351,18 @@ export default function App() {
           </div>
 
           <h2 className="font-serif text-5xl md:text-8xl tracking-[0.1em] text-[#FCFBF8] leading-tight mb-4 select-none uppercase">
-            VIOLETA
+            {currentHeroTitle}
           </h2>
-          <p className="font-serif italic text-lg md:text-2xl text-gold-200 tracking-wide max-w-2xl mx-auto mb-8 font-light">
-            "A harmonia rústica de cozinhas de autoria e o calor romântico no coração de Surubim."
+          <p className="font-serif italic text-lg md:text-2xl text-gold-200 tracking-wide max-w-2xl mx-auto mb-8 font-light leading-relaxed">
+            {currentHeroSubtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-6 mb-12">
             <button 
-              onClick={() => scrollToId('menu')}
-              className="px-8 py-3.5 bg-gold-500 text-neutral-950 text-xs font-semibold uppercase tracking-widest transition-all hover:bg-gold-400 hover:scale-105 shadow-md cursor-pointer"
+              onClick={() => hero.buttonLink.startsWith('#') ? scrollToId(hero.buttonLink.substring(1)) : window.open(hero.buttonLink, '_blank')}
+              className="px-8 py-3.5 bg-gold-500 text-neutral-950 text-xs font-semibold uppercase tracking-widest transition-all hover:bg-gold-400 hover:scale-105 shadow-md cursor-pointer rounded-lg"
             >
-              EXPLORAR CARDÁPIO
+              {hero.buttonText}
             </button>
             <button 
               onClick={() => window.open('https://www.instagram.com/violetabstr/', '_blank')}
@@ -399,6 +567,14 @@ export default function App() {
         </div>
       </section>
 
+      {/* 4. Próximos Eventos Section */}
+      <EventsSection 
+        events={events} 
+        whatsAppConfig={whatsAppConfig} 
+        romanticConfig={romanticTheme || undefined}
+        onNotify={triggerNotification} 
+      />
+
       {/* 4. Detail Dish modal overlay */}
       {selectedMenuItem && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -520,7 +696,20 @@ export default function App() {
           </div>
 
           <div className="text-center text-xs text-[#8E8376] space-y-1">
-            <p>© 2026 Violeta - Arte Culinária. Todos os direitos de etiqueta reservados.</p>
+            <p className="flex items-center justify-center gap-1.5 flex-wrap">
+              © 2026 Violeta - Arte Culinária. Todos os direitos de etiqueta reservados.
+              <button 
+                onClick={() => {
+                  setIsAdminOpen(true);
+                  triggerNotification('Solicitando autenticação para o Painel Administrativo...');
+                }}
+                className="text-neutral-800 hover:text-gold-400 transition-colors cursor-pointer p-1"
+                title="Área Administrativa Violeta"
+                id="footer-admin-lock"
+              >
+                <Lock className="w-3 h-3" />
+              </button>
+            </p>
             <p>E-mail Oficial de Contato: <span className="text-gold-400">atendimento@violetarestaurante.com.br</span></p>
             <p>Roteado com carinho por Surubim - PE, Pernambuco.</p>
           </div>
@@ -544,6 +733,35 @@ export default function App() {
 
         </div>
       </footer>
+
+      {/* 9. Portal Administrativo Violeta Overlay */}
+      {isAdminOpen && (
+        <AdminPanel 
+          onClose={() => {
+            setIsAdminOpen(false);
+            window.location.hash = ''; // Clear Hash parameters to return cleanly
+          }}
+          events={events}
+          onSaveEvents={handleSaveEvents}
+          hero={hero}
+          onSaveHero={handleSaveHero}
+          whatsAppConfig={whatsAppConfig}
+          onSaveWhatsApp={handleSaveWhatsApp}
+          romanticTheme={romanticTheme || undefined}
+          onSaveRomanticTheme={handleSaveRomanticTheme}
+          onNotify={triggerNotification}
+        />
+      )}
+
+      {/* 10. Romantic Campaign Overlays & Portals */}
+      {isRomanticCampaignActive && romanticTheme && (
+        <>
+          <RomanticPopup config={romanticTheme} />
+          {romanticTheme.enableHeartRain && <HeartRain />}
+          <FixedCupid position={romanticTheme.cupidPosition} />
+        </>
+      )}
+
 
     </div>
   );

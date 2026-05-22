@@ -20,6 +20,29 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
 
   const activeAtmosphere = ATMOSPHERES_VIOLETA[selectedAtmosphere];
 
+  const handlePartySizeChange = (newSize: number) => {
+    setBookingPartySize(newSize);
+    
+    // Check if current selected table can accommodate the new size
+    const currentTable = activeAtmosphere.tables.find(t => t.id === selectedTable);
+    if (currentTable && currentTable.seats >= newSize) {
+      // Current table is still perfectly fine! No need to auto-switch.
+      return;
+    }
+    
+    // Otherwise, find a table that can accommodate the new size
+    const compatibleTable = activeAtmosphere.tables.find(t => t.seats >= newSize);
+    if (compatibleTable) {
+      setSelectedTable(compatibleTable.id);
+      onNotify(`Sincronizado: ${newSize} pessoas. Mesa ${compatibleTable.id} (${compatibleTable.seats} lugares) selecionada.`);
+    } else {
+      setSelectedTable(null);
+      if (newSize > 4) {
+        onNotify(`Definido para ${newSize} pessoas. Nosso maior arranjo de mesa acomoda até 4 pessoas. Reservas de grupo são coordenadas via WhatsApp.`);
+      }
+    }
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -119,24 +142,38 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
               <div className="col-span-5 h-8 border border-dashed border-gold-500/10 rounded flex items-center justify-center mb-2 bg-[#090909]">
                 <span className="text-[9px] text-[#8E8376] tracking-widest uppercase">🍷 Adega Suspensa Climatizada & Velas de Violeta</span>
               </div>
-              {activeAtmosphere.tables.map((table) => (
-                <button
-                  key={table.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedTable(table.id);
-                    onNotify(`Selecionou a Mesa ${table.id}: ${table.seats} lugares`);
-                  }}
-                  className={`h-16 rounded-lg border flex flex-col items-center justify-center p-2 cursor-pointer transition-all ${
-                    selectedTable === table.id 
-                      ? 'bg-gold-400 text-neutral-950 border-white scale-105 shadow-md font-bold' 
-                      : 'bg-neutral-950 hover:bg-neutral-900 border-gold-800/20 text-[#A89F8F]'
-                  }`}
-                >
-                  <span className="text-xs font-serif leading-none">Mesa {table.id}</span>
-                  <span className="text-[8px] uppercase mt-1 tracking-widest font-sans opacity-70">{table.seats} Lugares</span>
-                </button>
-              ))}
+              {activeAtmosphere.tables.map((table) => {
+                const isSelected = selectedTable === table.id;
+                const fitsCapacity = table.seats >= bookingPartySize;
+                const matchesExactly = table.seats === bookingPartySize;
+                
+                return (
+                  <button
+                    key={table.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTable(table.id);
+                      setBookingPartySize(table.seats);
+                      onNotify(`Mesa ${table.id} selecionada. Capacidade de ${table.seats} lugares ativada no formulário.`);
+                    }}
+                    className={`h-16 rounded-lg border flex flex-col items-center justify-center p-2 cursor-pointer transition-all relative overflow-hidden ${
+                      isSelected 
+                        ? 'bg-gold-400 text-neutral-950 border-white scale-105 shadow-md font-bold' 
+                        : matchesExactly
+                          ? 'bg-neutral-950 hover:bg-neutral-900 border-gold-400/50 text-gold-200 ring-1 ring-gold-400/10 scale-102 font-bold'
+                          : fitsCapacity
+                            ? 'bg-neutral-950 hover:bg-neutral-900 border-gold-800/50 text-[#FCFBF8]'
+                            : 'bg-neutral-950/40 hover:bg-neutral-950/60 border-neutral-900/40 text-neutral-600 opacity-65'
+                    }`}
+                  >
+                    {matchesExactly && !isSelected && (
+                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-gold-400 rounded-full animate-pulse"></span>
+                    )}
+                    <span className="text-xs font-serif leading-none">Mesa {table.id}</span>
+                    <span className="text-[8px] uppercase mt-1 tracking-widest font-sans opacity-70">{table.seats} Lugares</span>
+                  </button>
+                );
+              })}
             </div>
 
 
@@ -239,16 +276,16 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
               <div className="flex items-center gap-3">
                 <button 
                   type="button"
-                  onClick={() => setBookingPartySize(prev => Math.max(1, prev - 1))}
-                  className="w-8 h-8 rounded border border-gold-800/20 text-xs text-gold-300 hover:border-gold-400 transition-colors flex items-center justify-center cursor-pointer"
+                  onClick={() => handlePartySizeChange(Math.max(1, bookingPartySize - 1))}
+                  className="w-8 h-8 rounded border border-gold-800/20 text-xs text-gold-300 hover:border-gold-400 transition-colors flex items-center justify-center cursor-pointer font-bold"
                 >
                   -
                 </button>
                 <span className="text-sm font-serif font-bold text-white w-4 text-center">{bookingPartySize}</span>
                 <button 
                   type="button"
-                  onClick={() => setBookingPartySize(prev => Math.min(12, prev + 1))}
-                  className="w-8 h-8 rounded border border-gold-800/20 text-xs text-gold-300 hover:border-gold-400 transition-colors flex items-center justify-center cursor-pointer"
+                  onClick={() => handlePartySizeChange(Math.min(12, bookingPartySize + 1))}
+                  className="w-8 h-8 rounded border border-gold-800/20 text-xs text-gold-300 hover:border-gold-400 transition-colors flex items-center justify-center cursor-pointer font-bold"
                 >
                   +
                 </button>
