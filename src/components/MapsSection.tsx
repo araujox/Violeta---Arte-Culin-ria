@@ -1,7 +1,33 @@
 import React from 'react';
 import { MapPin, Compass, Clock, Phone, Mail } from 'lucide-react';
+import { WhatsAppConfig } from '../types';
 
-export default function MapsSection() {
+interface MapsSectionProps {
+  whatsAppConfig?: WhatsAppConfig;
+}
+
+function formatPhoneNumber(num: string) {
+  if (!num) return '';
+  const digits = num.replace(/\D/g, '');
+  let local = digits;
+  if (local.startsWith('55') && local.length > 10) {
+    local = local.substring(2);
+  }
+  
+  if (local.length === 11) {
+    return `(${local.substring(0, 2)}) ${local.substring(2, 7)}-${local.substring(7)}`;
+  } else if (local.length === 10) {
+    return `(${local.substring(0, 2)}) ${local.substring(2, 6)}-${local.substring(6)}`;
+  }
+  
+  // Format standard if not mobile
+  if (digits.length >= 10) {
+    return `+${digits.substring(0, 2)} (${digits.substring(2, 4)}) ${digits.substring(4, 9)}-${digits.substring(9)}`;
+  }
+  return num;
+}
+
+export default function MapsSection({ whatsAppConfig }: MapsSectionProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
       
@@ -43,7 +69,7 @@ export default function MapsSection() {
               <div>
                 <p className="text-xs font-bold text-white uppercase tracking-wider">WhatsApp Concierge</p>
                 <p className="text-[11px] text-[#A89F8F] mt-0.5 font-mono">
-                  +55 (81) 98807-0000
+                  {whatsAppConfig?.number ? formatPhoneNumber(whatsAppConfig.number) : "+55 (81) 98807-0000"}
                 </p>
               </div>
             </div>

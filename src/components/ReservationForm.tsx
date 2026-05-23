@@ -1,12 +1,35 @@
 import React, { useState } from 'react';
 import { ATMOSPHERES_VIOLETA } from '../data';
 import { Calendar, Clock, Users, Check, Sparkles, Send, Coffee } from 'lucide-react';
+import { WhatsAppConfig } from '../types';
 
 interface ReservationFormProps {
+  whatsAppConfig?: WhatsAppConfig;
   onNotify: (text: string) => void;
 }
 
-export default function ReservationForm({ onNotify }: ReservationFormProps) {
+function formatPhoneNumber(num: string) {
+  if (!num) return '';
+  const digits = num.replace(/\D/g, '');
+  let local = digits;
+  if (local.startsWith('55') && local.length > 10) {
+    local = local.substring(2);
+  }
+  
+  if (local.length === 11) {
+    return `(${local.substring(0, 2)}) ${local.substring(2, 7)}-${local.substring(7)}`;
+  } else if (local.length === 10) {
+    return `(${local.substring(0, 2)}) ${local.substring(2, 6)}-${local.substring(6)}`;
+  }
+  
+  // Format standard if not mobile
+  if (digits.length >= 10) {
+    return `+${digits.substring(0, 2)} (${digits.substring(2, 4)}) ${digits.substring(4, 9)}-${digits.substring(9)}`;
+  }
+  return num;
+}
+
+export default function ReservationForm({ whatsAppConfig, onNotify }: ReservationFormProps) {
   const [selectedAtmosphere] = useState<'salone'>('salone');
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [bookingPartySize, setBookingPartySize] = useState<number>(2);
@@ -38,7 +61,7 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
     } else {
       setSelectedTable(null);
       if (newSize > 4) {
-        onNotify(`Definido para ${newSize} pessoas. Nosso maior arranjo de mesa acomoda até 4 pessoas. Reservas de grupo são coordenadas via WhatsApp.`);
+        onNotify(`Definido para ${newSize} pessoas. Reservas para grandes grupos (até 12 pessoas) serão coordenadas sob consulta via WhatsApp.`);
       }
     }
   };
@@ -54,12 +77,18 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
       onNotify("Por favor, preencha o seu e-mail.");
       return;
     }
-    if (selectedTable === null) {
+
+    const isGroupBooking = bookingPartySize > 4;
+
+    if (selectedTable === null && !isGroupBooking) {
       onNotify("Selecione uma de nossas mesas artísticas no mapa virtual de assentos.");
       return;
     }
 
-    const currentTable = activeAtmosphere.tables.find(t => t.id === selectedTable);
+    const currentTable = selectedTable !== null
+      ? activeAtmosphere.tables.find(t => t.id === selectedTable)
+      : { id: "Especial", desc: "Arranjo especial para grandes grupos (sob consulta)", location: "Salão" };
+
     if (!currentTable) return;
 
     // Upgrades list - empty as upgrades are removed
@@ -76,7 +105,7 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
       time: bookingTime,
       partySize: bookingPartySize,
       atmosphere: activeAtmosphere.title,
-      tableId: selectedTable,
+      tableId: selectedTable !== null ? selectedTable : "Especial",
       tableDesc: currentTable.desc,
       upgrades,
       totalDepositEstimate: (50 * bookingPartySize)
@@ -95,7 +124,9 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
       `• *Horário:* ${bookingTime}\n` +
       `• *Pessoas:* ${bookingPartySize} convidado(s)\n` +
       `• *Ambiente:* ${activeAtmosphere.title}\n` +
-      `• *Mesa Selecionada:* Mesa ${selectedTable} (${currentTable.desc})\n`;
+      (selectedTable !== null 
+        ? `• *Mesa Selecionada:* Mesa ${selectedTable} (${currentTable.desc})\n` 
+        : `• *Mesas:* Arranjo Imperial / Junção de Mesas para Grande Grupo (${bookingPartySize} convidados)\n`);
 
     if (upgrades.length > 0) {
       whatsappText += `\n✨ *Upgrades da Experiência selecionados:*\n` + upgrades.map(u => `  - ${u}`).join('\n') + `\n`;
@@ -103,8 +134,8 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
 
     whatsappText += `\nPor favor, validem a minha reserva de mesa. Obrigado(a)!`;
 
-    const cleanPhone = "5581988070000";
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(whatsappText)}`;
+    const cleanPhone = whatsAppConfig?.number || "5581988070000";
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone.replace(/\D/g, '')}&text=${encodeURIComponent(whatsappText)}`;
     
     // Redirect trigger
     setTimeout(() => {
@@ -191,6 +222,21 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
               </p>
               <p className="text-[9px] text-[#8E8376] mt-0.5 uppercase tracking-wider">
                 Localização: {activeAtmosphere.tables.find(t => t.id === selectedTable)?.location} • {activeAtmosphere.tables.find(t => t.id === selectedTable)?.seats} lugares configurados.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {selectedTable === null && bookingPartySize > 4 && (
+          <div className="p-4 rounded-lg bg-amber-950/20 border border-amber-500/20 text-left animate-fade-in flex items-start gap-3">
+            <span className="text-xl">✨</span>
+            <div>
+              <p className="text-[11px] font-bold text-amber-400 uppercase tracking-widest">Arranjo Especial para Grande Grupo</p>
+              <p className="text-xs text-[#FCFBF8] italic mt-1 font-serif">
+                "Nosso restaurante providenciará uma mesa Imperial ou junção personalizada para acomodar confortavelmente seus {bookingPartySize} convidados."
+              </p>
+              <p className="text-[9px] text-[#8E8376] mt-1.5 uppercase tracking-wider">
+                Localização: Salão Principal • Reservas para grupos de {bookingPartySize} pessoas coordenadas via canal direto do WhatsApp.
               </p>
             </div>
           </div>
@@ -300,7 +346,7 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
           type="submit"
           className="w-full py-4 bg-gold-400 text-neutral-950 text-xs font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:bg-gold-300 transition-colors shadow-lg shadow-gold-500/10 active:scale-95 cursor-pointer"
         >
-          <Send className="w-4 h-4" /> CONFIRMAR VIA WHATSAPP (81) 98807-0000
+          <Send className="w-4 h-4" /> CONFIRMAR VIA WHATSAPP {formatPhoneNumber(whatsAppConfig?.number || "5581988070000")}
         </button>
 
         <p className="text-[9px] text-[#8E8376] text-center italic leading-relaxed">
@@ -313,13 +359,15 @@ export default function ReservationForm({ onNotify }: ReservationFormProps) {
             <div className="flex justify-between items-center border-b border-gold-800/20 pb-2">
               <div>
                 <h5 className="font-serif text-sm text-[#FCFBF8] leading-none uppercase">Ticket de Reserva</h5>
-                <span className="text-[9px] text-gold-400 tracking-wider">Mesa nº {ticketIssued.tableId}</span>
+                <span className="text-[9px] text-gold-400 tracking-wider">
+                  {ticketIssued.tableId === "Especial" ? "Arranjo de Grupo" : `Mesa nº ${ticketIssued.tableId}`}
+                </span>
               </div>
               <span className="text-[10px] font-mono text-gold-400 font-bold">{ticketIssued.code}</span>
             </div>
             
             <p className="text-[10px] text-[#A89F8F]">
-              Gostoso(a) <strong className="text-white">{ticketIssued.name}</strong>, seu ticket foi criado. Você está sendo redirecionado para o WhatsApp <strong>(81) 98807-0000</strong> para registrar data e hora oficiais (<strong>{ticketIssued.date} às {ticketIssued.time}</strong>).
+              Sr(a). <strong className="text-white">{ticketIssued.name}</strong>, seu ticket foi criado. Você está sendo redirecionado para o WhatsApp <strong>{formatPhoneNumber(whatsAppConfig?.number || "5581988070000")}</strong> para registrar data e hora oficiais (<strong>{ticketIssued.date} às {ticketIssued.time}</strong>).
             </p>
 
             <div className="bg-[#101010] p-2.5 rounded text-[9px] text-[#8E8376] space-y-1">

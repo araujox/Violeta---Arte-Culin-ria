@@ -654,7 +654,7 @@ export default function App() {
 
       {/* 5. Booking area (Interactive Booking System) */}
       <section id="booking" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gold-800/10">
-        <ReservationForm onNotify={triggerNotification} />
+        <ReservationForm whatsAppConfig={whatsAppConfig} onNotify={triggerNotification} />
       </section>
 
       {/* 6. Guest Reviews area */}
@@ -678,7 +678,7 @@ export default function App() {
 
       {/* 7. Maps & Location Section */}
       <section id="localizacao" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gold-800/10">
-        <MapsSection />
+        <MapsSection whatsAppConfig={whatsAppConfig} />
       </section>
 
       {/* 8. Luxury Footer */}
