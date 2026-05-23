@@ -82,7 +82,18 @@ export function loadEvents(): EventBistro[] {
       localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(DEFAULT_EVENTS));
       return DEFAULT_EVENTS;
     }
-    return JSON.parse(data);
+    const val = JSON.parse(data);
+    if (!Array.isArray(val)) {
+      return DEFAULT_EVENTS;
+    }
+    return val.map(evt => {
+      if (typeof evt !== 'object' || evt === null) return null;
+      return {
+        ...evt,
+        active: evt.active ?? true,
+        isRomanticSpecial: evt.isRomanticSpecial ?? false
+      };
+    }).filter(Boolean) as EventBistro[];
   } catch (e) {
     console.error('Failed to load events from storage', e);
     return DEFAULT_EVENTS;
@@ -104,7 +115,11 @@ export function loadHero(): HeroBanner {
       localStorage.setItem(STORAGE_KEYS.HERO, JSON.stringify(DEFAULT_HERO_BANNER));
       return DEFAULT_HERO_BANNER;
     }
-    return JSON.parse(data);
+    const val = JSON.parse(data);
+    if (typeof val !== 'object' || val === null) {
+      return DEFAULT_HERO_BANNER;
+    }
+    return { ...DEFAULT_HERO_BANNER, ...val };
   } catch (e) {
     console.error('Failed to load hero from storage', e);
     return DEFAULT_HERO_BANNER;
@@ -126,7 +141,15 @@ export function loadWhatsApp(): WhatsAppConfig {
       localStorage.setItem(STORAGE_KEYS.WHATSAPP, JSON.stringify(DEFAULT_WHATSAPP_CONFIG));
       return DEFAULT_WHATSAPP_CONFIG;
     }
-    return JSON.parse(data);
+    const val = JSON.parse(data);
+    if (typeof val !== 'object' || val === null) {
+      // If it is stored as a direct phone string or legacy primitive, migrate gracefully
+      return {
+        ...DEFAULT_WHATSAPP_CONFIG,
+        number: typeof val === 'string' || typeof val === 'number' ? String(val) : DEFAULT_WHATSAPP_CONFIG.number
+      };
+    }
+    return { ...DEFAULT_WHATSAPP_CONFIG, ...val };
   } catch (e) {
     console.error('Failed to load whatsapp config from storage', e);
     return DEFAULT_WHATSAPP_CONFIG;

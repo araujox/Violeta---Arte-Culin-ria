@@ -43,16 +43,16 @@ export default function AdminPanel({
   const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic'>('events');
 
   // Hero form inputs
-  const [heroTitle, setHeroTitle] = useState(hero.title);
-  const [heroSubtitle, setHeroSubtitle] = useState(hero.subtitle);
-  const [heroImage, setHeroImage] = useState(hero.image);
-  const [heroBtnText, setHeroBtnText] = useState(hero.buttonText);
-  const [heroBtnLink, setHeroBtnLink] = useState(hero.buttonLink);
+  const [heroTitle, setHeroTitle] = useState(hero?.title ?? '');
+  const [heroSubtitle, setHeroSubtitle] = useState(hero?.subtitle ?? '');
+  const [heroImage, setHeroImage] = useState(hero?.image ?? '');
+  const [heroBtnText, setHeroBtnText] = useState(hero?.buttonText ?? '');
+  const [heroBtnLink, setHeroBtnLink] = useState(hero?.buttonLink ?? '');
 
   // WhatsApp form inputs
-  const [waNumber, setWaNumber] = useState(whatsAppConfig.number);
-  const [waDefaultMsg, setWaDefaultMsg] = useState(whatsAppConfig.defaultMessage);
-  const [waBtnText, setWaBtnText] = useState(whatsAppConfig.defaultButtonText);
+  const [waNumber, setWaNumber] = useState(whatsAppConfig?.number ?? '');
+  const [waDefaultMsg, setWaDefaultMsg] = useState(whatsAppConfig?.defaultMessage ?? '');
+  const [waBtnText, setWaBtnText] = useState(whatsAppConfig?.defaultButtonText ?? '');
 
   // Romantic Campaign form inputs
   const [romanticActive, setRomanticActive] = useState(romanticTheme?.active ?? true);
