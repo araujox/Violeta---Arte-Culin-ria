@@ -11,7 +11,8 @@ export default function RomanticPopup({ config }: RomanticPopupProps) {
   const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
-    if (!config.active) return;
+    const isActive = config.active === true || String(config.active) === 'true';
+    if (!isActive) return;
 
     // Direct configuration frequency check
     const storageKey = 'violeta_valentine_popup_dismissed';
@@ -53,7 +54,8 @@ export default function RomanticPopup({ config }: RomanticPopupProps) {
     }, 500);
   };
 
-  if (!config.active || !isRendered) return null;
+  const isActiveCheck = config.active === true || String(config.active) === 'true';
+  if (!isActiveCheck || !isRendered) return null;
 
   return (
     <div 

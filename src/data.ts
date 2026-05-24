@@ -13,83 +13,84 @@ export const DESSERT_IMG = dessertImg;
 export const VIOLETA_MENU: MenuItem[] = [
   {
     id: 'menu-1',
-    name: 'Burrata ao Pesto de Pistache e Flores',
+    name: 'Camarão Crocante',
     category: 'entradas',
-    price: 68,
-    description: 'Burrata cremosa de búfala fresca sobre cama de tomates-cereja confitados lentamente no azeite de ervas, pesto rústico de pistache cru e folhas selecionadas de rúcula com pétalas de violetas comestíveis.',
-    image: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600',
-    pairing: 'Chardonnay Mineral ou Drink Autoral de Gin Violeta',
-    anecdote: 'Um prelúdio refrescante que celebra o nome de nossa casa, combinando a cremosidade do leite de búfala e a textura crocante do pistache tostado.'
+    price: 59.90,
+    description: 'Camarão crocante servido com teriyaki de abacaxi e maionese de queijo provolone.',
+    image: 'https://images.unsplash.com/photo-1559742811-824132454cf4?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Vinho Branco Sauvignon Blanc ou Espumante Brut',
+    anecdote: 'Uma textura incrivelmente estaladiça combinando o toque adocicado do abacaxi caramelizado e o fundido de provolone suave.'
   },
   {
     id: 'menu-2',
-    name: 'Carpaccio Trufado da Terra',
+    name: 'Brusquetta Tradicional',
     category: 'entradas',
-    price: 74,
-    description: 'Fatias ultrafinas de filé de sol angus curtido na própria cozinha, regadas com azeite de trufas negras, brotos de mini-rúcula orgânica, queijo coalho artesanal ralado e lascassuperfinas de rabanete.',
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=600',
-    pairing: 'Vinho Tinto Cabernet Sauvignon de Guarda',
-    anecdote: 'Trazendo a sofisticação italiana para as origens nordestinas, com a cura sutil da carne de sol e o calor terroso das trufas.'
+    price: 39.90,
+    description: 'Bruschetta de pasta de tomate com mousse de ricota finalizado com molho pesto de manjericão.',
+    image: 'https://images.unsplash.com/photo-1572656631137-7935297eff55?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Vinho Tinto Leve ou Aperol Spritz',
+    anecdote: 'Um clássico italiano revisitado no Violeta com a leveza aérea da mousse de ricota fresca da casa e manjericão fresco colhido de nossa horta.'
   },
   {
     id: 'menu-3',
-    name: 'Risoto de Camarão ao Limão Siciliano com Ouro 24k',
+    name: 'Mousseline Prime',
     category: 'principais',
-    price: 98,
-    description: 'Arroz arbóreo importado emulsificado com queijo mascarpone, glacê cítrico de limão siciliano, generosos camarões grelhados na manteiga clarificada e decorado com uma folha inteira de ouro comestível 24k.',
-    image: RISOTTO_IMG,
-    pairing: 'Vinho Branco Sauvignon Blanc ou Soave Classico',
-    anecdote: 'O prato de maior contraste poético do Violeta: o sabor marcante e nobre dos camarões agraciado pelo brilho dourado e místico da realeza veneziana.'
+    price: 74.90,
+    description: 'Mousseline de jerimum na manteiga de alho confitado servido com ribs de mignon na espuma de queijo parmesão finalizado com redução de melado e chips de macaxeira.',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Vinho Português encorpado ou Cabernet Sauvignon',
+    anecdote: 'Indicação especial do Chef: a cremosidade do jerimum regional encontra a riqueza suculenta das ribs de mignon assadas lentamente por horas.',
+    isChefRecommended: true
   },
   {
     id: 'menu-4',
-    name: 'Medalhão ao Roti de Vinho Cabernet com Aligot',
+    name: 'Risoto de Arroz Negro',
     category: 'principais',
-    price: 115,
-    description: 'Corte alto de filé mignon selado em crosta rústica de ervas, regado ao demi-glace de vinho cabernet sauvignon apurado por 24 horas, servido com aligot ultra-cremoso de purê e queijo gruyère.',
-    image: WINE_IMG,
-    pairing: 'Vinho Tinto Encorpado Syrah ou Amarone',
-    anecdote: 'Uma dança perfeita de texturas: o filé vermelho suculento se desfaz na colher combinada à elasticidade do clássico aligot francês refinado.'
+    price: 79.90,
+    description: 'Risoto de arroz negro com caldo de camarões, polvo glaciado finalizado com azeite de salsa, aioli defumado e rúcula tostado.',
+    image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Vinho Branco Mineral ou Alvarinho Chardonnay',
+    anecdote: 'A profundidade mística do arroz negro importado, coroada com a maciez incomparável do polvo glaciado em fogo alto.'
   },
   {
     id: 'menu-5',
-    name: 'Nhoque Rústico ao Ragù de Costela',
-    category: 'principais',
-    price: 88,
-    description: 'Massas de nhoque artesanal de batata-doce roxa douradas na manteiga de garrafa, banhadas em ragù de costela bovina desfiada e cozida lentamente em infusão de especiarias e manjericão fresco.',
-    image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&q=80&w=600',
-    pairing: 'Vinho Carmenere ou Malbec Envelhecido',
-    anecdote: 'Simboliza a união das colinas do Vêneto com a riqueza do sertão, apresentando a cor púrpura vibrante oriunda da batata-doce.'
+    name: 'Violeta Hour Sour',
+    category: 'drinks',
+    price: 29.90,
+    description: 'Vermute branco, xarope de violeta, suco de limão siciliano e hibisco. Cremoso, cítrico, perfumado e sofisticado.',
+    image: 'https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Entradas de Burrata ou Bruschettas leves',
+    anecdote: 'O drink assinatura que traduz o nome de nossa casa em uma sofisticada alquimia sensorial doce e agradável.'
   },
   {
     id: 'menu-6',
-    name: 'Gin Tônica Violeta Imperial',
+    name: 'Negroni Clássico',
     category: 'drinks',
-    price: 42,
-    description: 'Infusão especial de Dry Gin com pétalas de Clitória Ternatea, conferindo uma tonalidade azul natural que se transforma em roxo real ao ser misturada com limão espremido e tônica premium.',
-    image: 'https://images.unsplash.com/photo-1524361115871-2ff7000cd18e?auto=format&fit=crop&q=80&w=600',
-    pairing: 'Burrata ao Pesto ou Tábua de Queijos Finos',
-    anecdote: 'Uma experiência alquímica na mesa do cliente, onde a química natural e os tons do restaurante se materializam sob os olhos.'
+    price: 29.90,
+    description: 'Gin, vermute rosso e campari, finalizado com twist de laranja. Amargo, equilibrado e extremamente elegante.',
+    image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Bolinho de Cupim ou Carpaccio',
+    anecdote: 'O mais elegante e reverenciado cocktail italiano clássico que aguça o paladar por notas ricas e herbais.'
   },
   {
     id: 'menu-7',
-    name: 'Tiramisù Contemporâneo de Capuccino',
+    name: 'Torta Basca Cremosa',
     category: 'sobremesas',
-    price: 36,
-    description: 'Nossa releitura do tradicional doce vêneto: biscoito biscuit embebido em calda densa de espresso e licor Amaretto, sob creme aveludado de mascarpone e poeira fina de cacau 100% belga com telha crocante dourada.',
-    image: DESSERT_IMG,
-    pairing: 'Licor Frangelico ou Espumante Moscatel',
-    anecdote: 'Nascido originalmente no norte de Itália, trazemos o aconchego do café coado fundido com o luxo da apresentação desconstruída.'
+    price: 26.90,
+    description: 'De doce de leite com caramelo salgado e crocante de nozes com sorvete de leite defumado.',
+    image: 'https://images.unsplash.com/photo-1524351199679-46cddf530c04?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Espumante de Sobremesa ou Vinho do Porto',
+    anecdote: 'Delicada crosta dourada e assada abrigando um interior incrivelmente cremoso de doce de leite artesanal com leveza mineral.'
   },
   {
     id: 'menu-8',
-    name: 'Cheesecake Desconstruída com Geleia de Amora',
+    name: 'Canolli Italiano Siciliano',
     category: 'sobremesas',
-    price: 32,
-    description: 'Copo baixo minimalista com crumble crocante de castanhas brasileiras, creme suave de cream cheese fresco infusionado com fava de baunilha e calda artesanal de amora silvestre e framboesas.',
-    image: 'https://images.unsplash.com/photo-1524351199679-46cddf530c04?auto=format&fit=crop&q=80&w=600',
-    pairing: 'Vinho Recioto ou Late Harvest branco',
-    anecdote: 'Equilíbrio sutil de acidez fresca e doçura perfumada, coroado com folhas de hortelã fresca e flor de alecrim.'
+    price: 19.90,
+    description: 'Com limão siciliano e mousse de chocolate 70%.',
+    image: 'https://images.unsplash.com/photo-1510972527409-cac5c441506a?auto=format&fit=crop&q=80&w=600',
+    pairing: 'Café Expresso encorpado ou Licor de Avelã',
+    anecdote: 'Autêntica crocância siciliana em combinação ousada e equilibrada de cítrico fresco com a suntuosidade de cacau belga.'
   }
 ];
 

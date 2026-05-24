@@ -7,6 +7,7 @@ export interface MenuItem {
   image: string;
   pairing: string;
   anecdote: string;
+  isChefRecommended?: boolean;
 }
 
 export interface Testimonial {

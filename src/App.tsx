@@ -21,6 +21,9 @@ import {
 import EventsSection from './components/EventsSection';
 import AdminPanel from './components/AdminPanel';
 import RomanticPopup from './components/RomanticPopup';
+import FullMenuSection from './components/FullMenuSection';
+import WineCellarSection from './components/WineCellarSection';
+import DrinksSection from './components/DrinksSection';
 
 export function VioletaLogo({ className = "w-6 h-6", strokeWidth = 2.2 }: { className?: string; strokeWidth?: number }) {
   return (
@@ -261,15 +264,9 @@ export default function App() {
   };
 
   const isRomanticCampaignActive = (() => {
-    if (!romanticTheme || !romanticTheme.active) return false;
-    
-    const todayStr = new Date().toISOString().split('T')[0];
-    const { startDate, endDate } = romanticTheme;
-    
-    if (startDate && todayStr < startDate) return false;
-    if (endDate && todayStr > endDate) return false;
-    
-    return true;
+    if (!romanticTheme) return false;
+    const isExplicitlyActive = romanticTheme.active === true || String(romanticTheme.active) === 'true';
+    return !!isExplicitlyActive;
   })();
 
   const currentHeroTitle = (isRomanticCampaignActive && romanticTheme?.bannerRomanticTitle) 
@@ -307,15 +304,16 @@ export default function App() {
           </div>
 
           {/* Minimalist Navigation */}
-          <nav className="hidden md:flex gap-8 text-xs uppercase tracking-widest text-[#B5AE9E]">
-            <button onClick={() => scrollToId('experiencia')} className="hover:text-gold-300 transition-colors cursor-pointer">L'Espresso</button>
-            <button onClick={() => scrollToId('menu')} className="hover:text-gold-300 transition-colors cursor-pointer">Il Cardápio</button>
+          <nav className="hidden md:flex gap-4 lg:gap-6 text-xs uppercase tracking-widest text-[#B5AE9E]">
+            <button onClick={() => scrollToId('experiencia')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">L'Espresso</button>
+            <button onClick={() => scrollToId('cardapio-completo')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">Cardápio</button>
+            <button onClick={() => scrollToId('adega')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">Vinhos</button>
+            <button onClick={() => scrollToId('drinks')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">Drinks</button>
             {events.some(evt => evt.active) && (
-              <button onClick={() => scrollToId('eventos')} className="hover:text-gold-300 transition-colors cursor-pointer text-gold-200">Próximos Eventos</button>
+              <button onClick={() => scrollToId('eventos')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">Próximos Eventos</button>
             )}
-            <button onClick={() => scrollToId('booking')} className="hover:text-gold-300 transition-colors cursor-pointer">Tabelas & Reservas</button>
-            <button onClick={() => scrollToId('avaliacoes')} className="hover:text-gold-300 transition-colors cursor-pointer">Avaliações</button>
-            <button onClick={() => scrollToId('localizacao')} className="hover:text-gold-300 transition-colors cursor-pointer">Como Chegar</button>
+            <button onClick={() => scrollToId('booking')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">Reservas</button>
+            <button onClick={() => scrollToId('localizacao')} className="hover:text-gold-300 transition-colors cursor-pointer whitespace-nowrap">Como Chegar</button>
           </nav>
 
           {/* Action button inside navbar */}
@@ -465,12 +463,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs uppercase tracking-[0.2em] text-[#B59C66] font-semibold">02 / Il Cardápio</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[#B59C66] font-semibold">02 / Pratos em Destaque</span>
             <h3 className="font-serif text-4xl md:text-5xl text-[#FCFBF8] tracking-wide mt-2 mb-4">
-              Nossas Criações de Assinatura
+              Seleções da Casa & Indicações
             </h3>
             <p className="text-sm text-[#8E8376]">
-              Explore nosso menu dividido entre belas entradas, robustos pratos principais, drinks aromáticos e requintadas sobremesas sob luz de velas.
+              Explore nossas criações mais elogiadas, divididas entre belas entradas, robustos pratos principais, drinks aromáticos e requintadas sobremesas.
             </p>
           </div>
 
@@ -505,7 +503,7 @@ export default function App() {
                 <div 
                   key={item.id} 
                   onClick={() => setSelectedMenuItem(item)}
-                  className="group bg-[#0d0d0d] rounded-lg overflow-hidden border border-gold-800/5 hover:border-gold-400/20 transition-all duration-300 gold-glow-hover flex flex-col sm:flex-row cursor-pointer"
+                  className="group bg-[#0d0d0d] rounded-lg overflow-hidden border border-gold-800/5 hover:border-gold-400/20 transition-all duration-300 gold-glow-hover flex flex-col sm:flex-row cursor-pointer relative"
                 >
                   
                   {/* Item Image Thumbnail Wrapper */}
@@ -517,6 +515,12 @@ export default function App() {
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute inset-0 bg-[#050505]/20 group-hover:bg-transparent"></div>
+                    {item.isChefRecommended && (
+                      <div className="absolute top-2 left-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white border border-amber-400/30 text-[9px] uppercase tracking-wider px-2 py-1 rounded-md font-semibold font-mono shadow-md flex items-center gap-1 z-10">
+                        <Star className="w-3 h-3 text-amber-200 fill-amber-200" />
+                        Indicação do Chef
+                      </div>
+                    )}
                   </div>
 
                   {/* Text card details content */}
@@ -527,7 +531,7 @@ export default function App() {
                           {item.name}
                         </h4>
                         <span className="font-serif text-base text-gold-400 font-bold shrink-0">
-                          R$ {item.price}
+                          R$ {item.price.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
                       
@@ -566,6 +570,15 @@ export default function App() {
 
         </div>
       </section>
+
+      {/* Cardápio Completo Section */}
+      <FullMenuSection whatsAppConfig={whatsAppConfig} />
+
+      {/* Adega de Vinhos Section */}
+      <WineCellarSection whatsAppConfig={whatsAppConfig} />
+
+      {/* Drinks Section */}
+      <DrinksSection whatsAppConfig={whatsAppConfig} />
 
       {/* 4. Próximos Eventos Section */}
       <EventsSection 
