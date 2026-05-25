@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { DRINK_ITEMS, DrinkItem } from '../utils/menuAndWineData';
 import { WhatsAppConfig } from '../types';
 import { GlassWater, Coffee, Sparkles, Send, Flame, Compass, Beer } from 'lucide-react';
+import ImageWithFallback from './ImageWithFallback';
 
 interface DrinksSectionProps {
   whatsAppConfig?: WhatsAppConfig;
@@ -138,8 +139,9 @@ export default function DrinksSection({ whatsAppConfig }: DrinksSectionProps) {
                     {/* Visual Card Image Cover with dark overlay */}
                     <div className="h-48 relative overflow-hidden bg-black">
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a0c] via-transparent to-transparent z-10"></div>
-                      <img
-                        src={drink.image}
+                      <ImageWithFallback
+                        itemName={drink.name}
+                        fallbackSrc={drink.image}
                         alt={drink.name}
                         className="w-full h-full object-cover opacity-45 group-hover:opacity-65 group-hover:scale-105 transition-all duration-700"
                         referrerPolicy="no-referrer"

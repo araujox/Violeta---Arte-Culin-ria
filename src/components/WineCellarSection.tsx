@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { WINE_ITEMS, WineItem } from '../utils/menuAndWineData';
 import { WhatsAppConfig } from '../types';
 import { Wine, Award, Star, Globe, Shield, Sparkles, Compass } from 'lucide-react';
+import ImageWithFallback from './ImageWithFallback';
 
 interface WineCellarSectionProps {
   whatsAppConfig?: WhatsAppConfig;
@@ -113,8 +114,9 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
                     <div className="h-64 relative bg-[#060405] overflow-hidden flex items-center justify-center">
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0e0a0b] via-transparent to-transparent z-10"></div>
                       
-                      <img 
-                        src={wine.image} 
+                      <ImageWithFallback 
+                        itemName={wine.name}
+                        fallbackSrc={wine.image} 
                         alt={wine.name} 
                         className="w-full h-full object-cover opacity-60 group-hover:opacity-85 group-hover:scale-105 transition-all duration-700"
                         referrerPolicy="no-referrer"

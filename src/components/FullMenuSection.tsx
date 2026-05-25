@@ -3,10 +3,37 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MENU_CATEGORIES, FULL_MENU_ITEMS, FullMenuItem } from '../utils/menuAndWineData';
 import { WhatsAppConfig } from '../types';
 import { Send, FileText, ChevronRight, Sparkles, Compass, Utensils } from 'lucide-react';
+import ImageWithFallback from './ImageWithFallback';
 
 interface FullMenuSectionProps {
   whatsAppConfig?: WhatsAppConfig;
 }
+
+const getCategoryFallbackImage = (category: string, name: string): string => {
+  switch (category) {
+    case 'entradas':
+      return 'https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&q=80&w=400';
+    case 'risotos':
+      if (name.toLowerCase().includes('negro')) {
+        return 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&q=80&w=400';
+      }
+      return 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&q=80&w=400';
+    case 'massas':
+      return 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&q=80&w=400';
+    case 'parmegiana':
+      return 'https://images.unsplash.com/photo-1626379616459-b2ce1d9decbc?auto=format&fit=crop&q=80&w=400';
+    case 'saladas':
+      return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=400';
+    case 'sobremesas':
+      return 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=400';
+    case 'almoco':
+      return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400';
+    case 'kids':
+      return 'https://images.unsplash.com/photo-1594212699903-ec8a3cee50f6?auto=format&fit=crop&q=80&w=400';
+    default:
+      return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400';
+  }
+};
 
 export default function FullMenuSection({ whatsAppConfig }: FullMenuSectionProps) {
   const [activeCategory, setActiveCategory] = useState<string>('entradas');
@@ -122,26 +149,42 @@ export default function FullMenuSection({ whatsAppConfig }: FullMenuSectionProps
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05, duration: 0.4 }}
                   onClick={() => handleItemClick(item)}
-                  className="group flex flex-col justify-between p-5 rounded-lg border border-gold-800/10 bg-[#0c0c0c]/80 hover:bg-[#0c0c0c] hover:border-gold-500/30 transition-all duration-300 cursor-pointer"
+                  className="group flex flex-col sm:flex-row justify-between rounded-lg border border-gold-800/10 bg-[#0c0c0c]/80 hover:bg-[#0c0c0c] hover:border-gold-500/30 transition-all duration-300 cursor-pointer overflow-hidden"
                 >
-                  <div className="flex justify-between items-start gap-3 mb-2">
-                    <h4 className="font-serif text-[15px] md:text-base text-[#FCFBF8] tracking-wide group-hover:text-gold-300 font-medium transition-colors">
-                      {item.name}
-                    </h4>
-                    <span className="font-serif text-sm md:text-base text-gold-400 font-bold tracking-tight whitespace-nowrap pt-0.5">
-                      R$ {item.price.toFixed(2).replace('.', ',')}
-                    </span>
+                  {/* Item Image Thumbnail withFallback */}
+                  <div className="w-full sm:w-28 h-40 sm:h-auto relative overflow-hidden shrink-0 bg-black/40 border-b sm:border-b-0 sm:border-r border-gold-800/10">
+                    <ImageWithFallback
+                      itemName={item.name}
+                      fallbackSrc={getCategoryFallbackImage(item.category, item.name)}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-85"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
 
-                  <p className="text-[11px] md:text-xs text-[#8E8376] leading-relaxed group-hover:text-[#A89F8F] transition-colors mb-4">
-                    {item.description}
-                  </p>
+                  {/* Item text content */}
+                  <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                    <div>
+                      <div className="flex justify-between items-start gap-3 mb-2">
+                        <h4 className="font-serif text-[15px] md:text-base text-[#FCFBF8] tracking-wide group-hover:text-gold-300 font-medium transition-colors line-clamp-1">
+                          {item.name}
+                        </h4>
+                        <span className="font-serif text-sm md:text-base text-gold-400 font-bold tracking-tight whitespace-nowrap">
+                          R$ {item.price.toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
 
-                  <div className="flex items-center justify-between text-[9px] text-[#555] group-hover:text-gold-500/65 border-t border-gold-800/5 pt-3 uppercase tracking-widest transition-colors font-medium">
-                    <span>Menu Violeta</span>
-                    <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Solicitar Prato <Compass className="w-2.5 h-2.5" />
-                    </span>
+                      <p className="text-[11px] md:text-xs text-[#8E8376] leading-relaxed group-hover:text-[#A89F8F] transition-colors mb-4 line-clamp-2 md:line-clamp-3">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[9px] text-[#555] group-hover:text-gold-500/65 border-t border-gold-800/5 pt-3 uppercase tracking-widest transition-colors font-medium">
+                      <span>Menu Violeta</span>
+                      <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Solicitar Prato <Compass className="w-2.5 h-2.5" />
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               ))}

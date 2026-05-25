@@ -11,6 +11,7 @@ import AudioAmbiance from './components/AudioAmbiance';
 import ReservationForm from './components/ReservationForm';
 import ReviewSection from './components/ReviewSection';
 import MapsSection from './components/MapsSection';
+import ImageWithFallback from './components/ImageWithFallback';
 
 import { 
   loadEvents, saveEvents, 
@@ -508,8 +509,9 @@ export default function App() {
                   
                   {/* Item Image Thumbnail Wrapper */}
                   <div className="sm:w-44 h-48 sm:h-full relative overflow-hidden shrink-0">
-                    <img 
-                      src={item.image} 
+                    <ImageWithFallback 
+                      itemName={item.name}
+                      fallbackSrc={item.image} 
                       alt={item.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       referrerPolicy="no-referrer"
