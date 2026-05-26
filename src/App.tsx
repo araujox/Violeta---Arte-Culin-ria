@@ -769,7 +769,7 @@ export default function App() {
       )}
 
       {/* 10. Romantic Campaign Overlays & Portals */}
-      {isRomanticCampaignActive && romanticTheme && (
+      {isRomanticCampaignActive && romanticTheme && !isAdminOpen && (
         <>
           <RomanticPopup config={romanticTheme} />
           {romanticTheme.enableHeartRain && <HeartRain />}
