@@ -6,7 +6,6 @@ const CARDAPIO_FILES = [
   'alfredo.jpeg',
   'brusqueta.jpeg',
   'camarão crocante.jpeg',
-  'carbonara.jpeg',
   'cocada.jpeg',
   'cracker de ceviche.jpeg',
   'mousseline.jpeg',
@@ -26,6 +25,32 @@ const CARDAPIO_FILES = [
   'vinagrete de polvo.jpeg'
 ];
 
+// Explicit list of files that exist in the /public/cardapio/vinhos directory
+const WINE_FILES = [
+  'Bons Ventos.png',
+  'Cabriz Colheita Branco.png',
+  'Cabriz Colheita Tinto.png',
+  'Cartuxa Evora.png',
+  'Casa Perini Aquarela.png',
+  'Casal Garcia Branco Sweet.png',
+  'Chac Chac Cabernet Franc.png',
+  'Chac Chac Malbec.png',
+  'Chac Chac Sauvignon Blanc.png',
+  'Chilano Sauvignon Blanc.png',
+  'EA Cartuxa Tinto Red.png',
+  'Freixenet Moscato.png',
+  'Gato Negro Sweet Red.png',
+  'Minimalista Pinot Grigio Branco.png',
+  'Pata Negra Oro Tempranillo.png',
+  'Rapariga da Quinta (Colheita Selecionada).png',
+  'Rio Sol Branco Moscatel.png',
+  'Trapiche Vineyards Malbec.png',
+  'Vinho Barrica Andina Syrah Tinto.png',
+  'carbonara.jpeg',
+  'Chilano_Branco_Moscato-removebg-preview.png',
+  'soldado-removebg-preview.png'
+];
+
 // Special overrides map for spelling differences and specific recipes
 const SPECIAL_MAPPINGS: Record<string, string> = {
   'fettuccine de cogumelo': 'Fetuccine Cogumelo.jpeg',
@@ -35,7 +60,8 @@ const SPECIAL_MAPPINGS: Record<string, string> = {
   'cracker com ceviche': 'cracker de ceviche.jpeg',
   'brusquetta': 'brusqueta.jpeg',
   'brusquetta tradicional': 'brusqueta.jpeg',
-  'carbonara de camarao': 'carbonara.jpeg',
+  'carbonara de camarao': 'vinhos/carbonara.jpeg', // mapped to brand-new location in wine subfolder
+  'carbonara': 'vinhos/carbonara.jpeg', // mapped to brand-new location in wine subfolder
   'fettuccine ao pesto': 'pesto.jpeg',
   'mousseline prime': 'mousseline.jpeg',
   'tagliatelle': 'tagliate.jpeg',
@@ -43,6 +69,17 @@ const SPECIAL_MAPPINGS: Record<string, string> = {
   'salada de file mignon': 'salada file.jpeg',
   'cocada de forno': 'cocada.jpeg',
   'torta basca cremosa': 'torta basca.jpeg',
+};
+
+const SPECIAL_WINE_MAPPINGS: Record<string, string> = {
+  'chileno branco moscato': 'Chilano_Branco_Moscato-removebg-preview.png',
+  'chilano branco moscato': 'Chilano_Branco_Moscato-removebg-preview.png',
+  'chileno sauvignon blanc': 'Chilano Sauvignon Blanc.png',
+  'vinho barrica andina syrah tinto': 'Vinho Barrica Andina Syrah Tinto.png',
+  'rapariga da quinta colheita selecionada': 'Rapariga da Quinta (Colheita Selecionada).png',
+  'soldado tinto': 'soldado-removebg-preview.png',
+  'soldado.png': 'soldado-removebg-preview.png',
+  'soldado': 'soldado-removebg-preview.png',
 };
 
 // Strips accents, stop-words, non-alphas to allow comparison with file names
@@ -60,7 +97,7 @@ export function getLocalImagePath(itemName: string): string | null {
   const normName = itemName.toLowerCase().trim();
   const normStripped = normName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  // 1. Explicit mapping override check
+  // 1. Explicit food mappings
   if (SPECIAL_MAPPINGS[normStripped]) {
     return `/cardapio/${SPECIAL_MAPPINGS[normStripped]}`;
   }
@@ -68,8 +105,26 @@ export function getLocalImagePath(itemName: string): string | null {
     return `/cardapio/${SPECIAL_MAPPINGS[normName]}`;
   }
 
-  // 2. Exact match check
+  // 2. Explicit wine mappings
+  if (SPECIAL_WINE_MAPPINGS[normStripped]) {
+    return `/cardapio/vinhos/${SPECIAL_WINE_MAPPINGS[normStripped]}`;
+  }
+  if (SPECIAL_WINE_MAPPINGS[normName]) {
+    return `/cardapio/vinhos/${SPECIAL_WINE_MAPPINGS[normName]}`;
+  }
+
+  // 3. Exact/substring wine match check (check wine list first if name might match wine)
   const simpleName = simplify(itemName);
+  
+  for (const file of WINE_FILES) {
+    const fileWithoutExt = file.substring(0, file.lastIndexOf('.'));
+    const simpleFile = simplify(fileWithoutExt);
+    if (simpleFile === simpleName || simpleName.includes(simpleFile) || simpleFile.includes(simpleName)) {
+      return `/cardapio/vinhos/${file}`;
+    }
+  }
+
+  // 4. Exact match check for food
   for (const file of CARDAPIO_FILES) {
     const fileWithoutExt = file.substring(0, file.lastIndexOf('.'));
     if (simplify(fileWithoutExt) === simpleName) {
@@ -77,7 +132,7 @@ export function getLocalImagePath(itemName: string): string | null {
     }
   }
 
-  // 3. Substring match check
+  // 5. Substring match check for food
   for (const file of CARDAPIO_FILES) {
     const fileWithoutExt = file.substring(0, file.lastIndexOf('.'));
     const simpleFile = simplify(fileWithoutExt);
