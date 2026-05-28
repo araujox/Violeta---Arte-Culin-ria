@@ -17,7 +17,10 @@ import {
   loadEvents, saveEvents, 
   loadHero, saveHero, 
   loadWhatsApp, saveWhatsApp,
-  loadRomanticTheme, saveRomanticTheme
+  loadRomanticTheme, saveRomanticTheme,
+  loadNatalTheme, saveNatalTheme,
+  loadPascoaTheme, savePascoaTheme,
+  loadAnoNovoTheme, saveAnoNovoTheme
 } from './utils/adminStorage';
 import EventsSection from './components/EventsSection';
 import AdminPanel from './components/AdminPanel';
@@ -25,6 +28,13 @@ import RomanticPopup from './components/RomanticPopup';
 import FullMenuSection from './components/FullMenuSection';
 import WineCellarSection from './components/WineCellarSection';
 import DrinksSection from './components/DrinksSection';
+import { 
+  SnowRain, 
+  EasterEggRain, 
+  NewYearSparklesRain, 
+  FixedMascot, 
+  SeasonalThematicPopup 
+} from './components/SeasonalCampaignOverlays';
 
 export function VioletaLogo({ className = "w-6 h-6", strokeWidth = 2.2 }: { className?: string; strokeWidth?: number }) {
   return (
@@ -214,6 +224,9 @@ export default function App() {
   const [hero, setHero] = useState<HeroBanner>(() => loadHero());
   const [whatsAppConfig, setWhatsAppConfig] = useState<WhatsAppConfig>(() => loadWhatsApp());
   const [romanticTheme, setRomanticTheme] = useState(() => loadRomanticTheme());
+  const [natalTheme, setNatalTheme] = useState(() => loadNatalTheme());
+  const [pascoaTheme, setPascoaTheme] = useState(() => loadPascoaTheme());
+  const [anoNovoTheme, setAnoNovoTheme] = useState(() => loadAnoNovoTheme());
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Monitor location hashes for hidden navigation entries
@@ -250,6 +263,21 @@ export default function App() {
     saveRomanticTheme(newConfig);
   };
 
+  const handleSaveNatalTheme = (newConfig: any) => {
+    setNatalTheme(newConfig);
+    saveNatalTheme(newConfig);
+  };
+
+  const handleSavePascoaTheme = (newConfig: any) => {
+    setPascoaTheme(newConfig);
+    savePascoaTheme(newConfig);
+  };
+
+  const handleSaveAnoNovoTheme = (newConfig: any) => {
+    setAnoNovoTheme(newConfig);
+    saveAnoNovoTheme(newConfig);
+  };
+
   const triggerNotification = (text: string) => {
     setNotification(text);
     setTimeout(() => {
@@ -270,18 +298,50 @@ export default function App() {
     return !!isExplicitlyActive;
   })();
 
-  const currentHeroTitle = (isRomanticCampaignActive && romanticTheme?.bannerRomanticTitle) 
-    ? romanticTheme.bannerRomanticTitle 
-    : hero.title;
+  const isNatalCampaignActive = (() => {
+    if (!natalTheme) return false;
+    const isExplicitlyActive = natalTheme.active === true || String(natalTheme.active) === 'true';
+    return !!isExplicitlyActive;
+  })();
 
-  const currentHeroSubtitle = (isRomanticCampaignActive && romanticTheme?.bannerRomanticSlogan) 
-    ? romanticTheme.bannerRomanticSlogan 
-    : hero.subtitle;
+  const isPascoaCampaignActive = (() => {
+    if (!pascoaTheme) return false;
+    const isExplicitlyActive = pascoaTheme.active === true || String(pascoaTheme.active) === 'true';
+    return !!isExplicitlyActive;
+  })();
+
+  const isAnoNovoCampaignActive = (() => {
+    if (!anoNovoTheme) return false;
+    const isExplicitlyActive = anoNovoTheme.active === true || String(anoNovoTheme.active) === 'true';
+    return !!isExplicitlyActive;
+  })();
+
+  const currentHeroTitle = (() => {
+    if (isRomanticCampaignActive && romanticTheme?.bannerRomanticTitle) return romanticTheme.bannerRomanticTitle;
+    if (isNatalCampaignActive && natalTheme?.bannerTitle) return natalTheme.bannerTitle;
+    if (isPascoaCampaignActive && pascoaTheme?.bannerTitle) return pascoaTheme.bannerTitle;
+    if (isAnoNovoCampaignActive && anoNovoTheme?.bannerTitle) return anoNovoTheme.bannerTitle;
+    return hero.title;
+  })();
+
+  const currentHeroSubtitle = (() => {
+    if (isRomanticCampaignActive && romanticTheme?.bannerRomanticSlogan) return romanticTheme.bannerRomanticSlogan;
+    if (isNatalCampaignActive && natalTheme?.bannerSlogan) return natalTheme.bannerSlogan;
+    if (isPascoaCampaignActive && pascoaTheme?.bannerSlogan) return pascoaTheme.bannerSlogan;
+    if (isAnoNovoCampaignActive && anoNovoTheme?.bannerSlogan) return anoNovoTheme.bannerSlogan;
+    return hero.subtitle;
+  })();
+
+  const getThemeBgClass = () => {
+    if (isRomanticCampaignActive) return 'bg-[#090405] theme-romantic';
+    if (isNatalCampaignActive) return 'bg-[#05140d] theme-natal';
+    if (isPascoaCampaignActive) return 'bg-[#120a06] theme-pascoa';
+    if (isAnoNovoCampaignActive) return 'bg-[#070709] theme-anonovo';
+    return 'bg-violeta-deep';
+  };
 
   return (
-    <div className={`min-h-screen text-[#ECE6D9] font-sans antialiased selection:bg-violeta-bright/40 selection:text-gold-100 ${
-      isRomanticCampaignActive ? 'bg-[#090405] theme-romantic' : 'bg-violeta-deep'
-    }`}>
+    <div className={`min-h-screen text-[#ECE6D9] font-sans antialiased selection:bg-violeta-bright/40 selection:text-gold-100 ${getThemeBgClass()}`}>
       
       {/* Premium Ambient Notification Display */}
       {notification && (
@@ -456,6 +516,17 @@ export default function App() {
         </div>
       </section>
 
+      {/* Próximos Eventos Section (Moved before Cardápio) */}
+      <EventsSection 
+        events={events} 
+        whatsAppConfig={whatsAppConfig} 
+        romanticConfig={romanticTheme || undefined}
+        natalConfig={natalTheme || undefined}
+        pascoaConfig={pascoaTheme || undefined}
+        anoNovoConfig={anoNovoTheme || undefined}
+        onNotify={triggerNotification} 
+      />
+
       {/* 3. Cardapio Area (Menu Explorer) */}
       <section id="menu" className="py-24 bg-violeta-dark/30 relative border-t border-b border-gold-800/10">
         
@@ -504,46 +575,46 @@ export default function App() {
                 <div 
                   key={item.id} 
                   onClick={() => setSelectedMenuItem(item)}
-                  className="group bg-[#0d0d0d] rounded-lg overflow-hidden border border-gold-800/5 hover:border-gold-400/20 transition-all duration-300 gold-glow-hover flex flex-col sm:flex-row cursor-pointer relative"
+                  className="group bg-[#0d0d0d] rounded-2xl overflow-hidden border border-gold-800/10 hover:border-gold-400/20 transition-all duration-300 gold-glow-hover flex flex-row items-center gap-4 p-3 sm:p-4 cursor-pointer relative"
                 >
                   
-                  {/* Item Image Thumbnail Wrapper */}
-                  <div className="sm:w-44 h-48 sm:h-full relative overflow-hidden shrink-0">
+                  {/* Item Image Thumbnail Wrapper - Nested Rounded Square */}
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 aspect-square relative overflow-hidden shrink-0 bg-[#050304] border border-gold-800/15 rounded-2xl shadow-md">
                     <ImageWithFallback 
                       itemName={item.name}
                       fallbackSrc={item.image} 
                       alt={item.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover scale-102 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-700"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-[#050505]/20 group-hover:bg-transparent"></div>
+                    <div className="absolute inset-0 bg-[#050505]/10 group-hover:bg-transparent pointer-events-none"></div>
                     {item.isChefRecommended && (
-                      <div className="absolute top-2 left-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white border border-amber-400/30 text-[9px] uppercase tracking-wider px-2 py-1 rounded-md font-semibold font-mono shadow-md flex items-center gap-1 z-10">
-                        <Star className="w-3 h-3 text-amber-200 fill-amber-200" />
-                        Indicação do Chef
+                      <div className="absolute top-1.5 left-1.5 bg-gradient-to-r from-[#801c27] to-[#9c2432] text-white border border-[#bf2f41]/30 text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-md font-semibold font-mono shadow-md flex items-center gap-0.5 z-10 scale-90 sm:scale-100 origin-top-left">
+                        <Star className="w-2.5 h-2.5 text-[#fff9fa] fill-[#fff9fa]" />
+                        Chef
                       </div>
                     )}
                   </div>
 
                   {/* Text card details content */}
-                  <div className="p-6 flex flex-col justify-between flex-1">
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1 h-24 sm:h-32">
                     <div>
-                      <div className="flex justify-between items-start gap-4 mb-2">
-                        <h4 className="font-serif text-base text-[#FCFBF8] tracking-wide group-hover:text-gold-300 transition-colors">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <h4 className="font-serif text-[13px] sm:text-base text-[#FCFBF8] tracking-wide group-hover:text-gold-300 transition-colors line-clamp-1 font-medium">
                           {item.name}
                         </h4>
-                        <span className="font-serif text-base text-gold-400 font-bold shrink-0">
+                        <span className="font-serif text-xs sm:text-base text-gold-400 font-bold tracking-tight whitespace-nowrap">
                           R$ {item.price.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
                       
-                      <p className="text-xs text-[#8E8376] leading-relaxed line-clamp-3 mb-4">
+                      <p className="text-[10px] sm:text-xs text-[#8E8376] leading-snug sm:leading-relaxed line-clamp-2 md:line-clamp-3">
                         {item.description}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[10px] text-gold-400 border-t border-gold-800/10 pt-3">
-                      <Wine className="w-3.5 h-3.5 shrink-0" />
+                    <div className="flex items-center gap-1.5 text-[9px] text-[#A89F8F]/95 group-hover:text-gold-400 border-t border-gold-800/5 pt-1.5 transition-colors">
+                      <Wine className="w-3 h-3 text-gold-400 shrink-0" />
                       <span className="truncate">Sugerido com: {item.pairing}</span>
                     </div>
                   </div>
@@ -581,14 +652,6 @@ export default function App() {
 
       {/* Drinks Section */}
       <DrinksSection whatsAppConfig={whatsAppConfig} />
-
-      {/* 4. Próximos Eventos Section */}
-      <EventsSection 
-        events={events} 
-        whatsAppConfig={whatsAppConfig} 
-        romanticConfig={romanticTheme || undefined}
-        onNotify={triggerNotification} 
-      />
 
       {/* 4. Detail Dish modal overlay */}
       {selectedMenuItem && (
@@ -764,16 +827,54 @@ export default function App() {
           onSaveWhatsApp={handleSaveWhatsApp}
           romanticTheme={romanticTheme || undefined}
           onSaveRomanticTheme={handleSaveRomanticTheme}
+          natalTheme={natalTheme || undefined}
+          onSaveNatalTheme={handleSaveNatalTheme}
+          pascoaTheme={pascoaTheme || undefined}
+          onSavePascoaTheme={handleSavePascoaTheme}
+          anoNovoTheme={anoNovoTheme || undefined}
+          onSaveAnoNovoTheme={handleSaveAnoNovoTheme}
           onNotify={triggerNotification}
         />
       )}
 
-      {/* 10. Romantic Campaign Overlays & Portals */}
-      {isRomanticCampaignActive && romanticTheme && !isAdminOpen && (
+      {/* 10. Campaigns Overlays & Portals */}
+      {!isAdminOpen && (
         <>
-          <RomanticPopup config={romanticTheme} />
-          {romanticTheme.enableHeartRain && <HeartRain />}
-          <FixedCupid position={romanticTheme.cupidPosition} />
+          {/* A. Romantic Theme */}
+          {isRomanticCampaignActive && romanticTheme && (
+            <>
+              <RomanticPopup config={romanticTheme} />
+              {romanticTheme.enableHeartRain && <HeartRain />}
+              <FixedCupid position={romanticTheme.cupidPosition} />
+            </>
+          )}
+
+          {/* B. Christmas (Natal) Theme */}
+          {isNatalCampaignActive && natalTheme && (
+            <>
+              <SeasonalThematicPopup type="natal" config={natalTheme} />
+              {natalTheme.enableEffect && <SnowRain />}
+              <FixedMascot type="natal" position={natalTheme.elementPosition} />
+            </>
+          )}
+
+          {/* C. Easter (Páscoa) Theme */}
+          {isPascoaCampaignActive && pascoaTheme && (
+            <>
+              <SeasonalThematicPopup type="pascoa" config={pascoaTheme} />
+              {pascoaTheme.enableEffect && <EasterEggRain />}
+              <FixedMascot type="pascoa" position={pascoaTheme.elementPosition} />
+            </>
+          )}
+
+          {/* D. New Year (Ano Novo) Theme */}
+          {isAnoNovoCampaignActive && anoNovoTheme && (
+            <>
+              <SeasonalThematicPopup type="anonovo" config={anoNovoTheme} />
+              {anoNovoTheme.enableEffect && <NewYearSparklesRain />}
+              <FixedMascot type="anonovo" position={anoNovoTheme.elementPosition} />
+            </>
+          )}
         </>
       )}
 

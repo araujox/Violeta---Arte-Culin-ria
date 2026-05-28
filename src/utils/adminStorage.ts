@@ -1,4 +1,4 @@
-import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig } from '../types';
+import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig } from '../types';
 import { HERO_IMG } from '../data';
 
 const STORAGE_KEYS = {
@@ -6,6 +6,9 @@ const STORAGE_KEYS = {
   HERO: 'violeta_bistro_hero',
   WHATSAPP: 'violeta_bistro_whatsapp',
   ROMANTIC: 'violeta_bistro_romantic',
+  NATAL: 'violeta_bistro_natal',
+  PASCOA: 'violeta_bistro_pascoa',
+  ANO_NOVO: 'violeta_bistro_anonovo',
 };
 
 // Default high-end seeded events matching Violeta's exquisite aesthetic
@@ -105,6 +108,36 @@ export function saveEvents(events: EventBistro[]): void {
     localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
   } catch (e) {
     console.error('Failed to save events to storage', e);
+    // Self-healing check: check if any event image is a massive data URL and try to compress
+    const eventWithDataUrl = events.find(evt => evt.image && evt.image.startsWith('data:image'));
+    if (eventWithDataUrl) {
+      console.log('Found event image as data URL, attempting auto-compression to resolve quota issue...');
+      const compressionPromises = events.map(evt => {
+        return new Promise<EventBistro>((resolve) => {
+          if (evt.image && evt.image.startsWith('data:image')) {
+            compressImage(
+              evt.image,
+              (compressed) => resolve({ ...evt, image: compressed }),
+              () => resolve(evt)
+            );
+          } else {
+            resolve(evt);
+          }
+        });
+      });
+
+      Promise.all(compressionPromises).then(optimizedEvents => {
+        try {
+          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(optimizedEvents));
+          console.log('Successfully optimized and saved all event images after quota auto-compression!');
+        } catch (retryError) {
+          console.error('Save events failed even after image optimization', retryError);
+          handleStorageQuotaExceeded('violeta_bistro_events', retryError);
+        }
+      });
+    } else {
+      handleStorageQuotaExceeded('violeta_bistro_events', e);
+    }
   }
 }
 
@@ -131,6 +164,28 @@ export function saveHero(hero: HeroBanner): void {
     localStorage.setItem(STORAGE_KEYS.HERO, JSON.stringify(hero));
   } catch (e) {
     console.error('Failed to save hero to storage', e);
+    // Self-healing check: check if hero image is a massive data URL and try to compress
+    if (hero.image && hero.image.startsWith('data:image')) {
+      console.log('Hero image is a data URL, attempting auto-compression to resolve quota issue...');
+      compressImage(
+        hero.image,
+        (compressedImage) => {
+          try {
+            const optimizedHero = { ...hero, image: compressedImage };
+            localStorage.setItem(STORAGE_KEYS.HERO, JSON.stringify(optimizedHero));
+            console.log('Successfully optimized and saved hero banner after quota auto-compression!');
+          } catch (retryError) {
+            console.error('Save failed even after image optimization', retryError);
+            handleStorageQuotaExceeded('violeta_bistro_hero', retryError);
+          }
+        },
+        () => {
+          handleStorageQuotaExceeded('violeta_bistro_hero', e);
+        }
+      );
+    } else {
+      handleStorageQuotaExceeded('violeta_bistro_hero', e);
+    }
   }
 }
 
@@ -171,6 +226,89 @@ export function getWhatsAppLink(phone: string, text: string): string {
   return `https://wa.me/${cleanPhone}?text=${encodedText}`;
 }
 
+// Helper function to compress images using a hidden HTML canvas
+export function compressImage(
+  base64Str: string,
+  onSuccess: (compressedBase64: string) => void,
+  onError: (errMsg: string) => void
+) {
+  // Check if it is a base64 image
+  if (!base64Str || !base64Str.startsWith('data:image')) {
+    onSuccess(base64Str);
+    return;
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1200; // Optimal resolutions for hero & previews
+      const MAX_HEIGHT = 1200;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round((width * MAX_HEIGHT) / height);
+          height = MAX_HEIGHT;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        onSuccess(base64Str);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Compress to high performance, sharp JPEG representation with 0.7 quality
+      // This will easily bring a multi-megabyte image down to 80KB-190KB
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      onSuccess(compressedDataUrl);
+    } catch (err) {
+      console.error('Image compression failed, fallback to original', err);
+      onSuccess(base64Str);
+    }
+  };
+  img.onerror = () => {
+    onError('Erro ao processar imagem para compressão.');
+  };
+  img.src = base64Str;
+}
+
+function handleStorageQuotaExceeded(key: string, error: any) {
+  const isQuotaError = 
+    (error && error instanceof DOMException && (
+      // everything except Firefox
+      error.code === 22 ||
+      // Firefox
+      error.code === 1014 ||
+      // test name field too
+      error.name === 'QuotaExceededError' ||
+      error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    )) || (error && (String(error).toLowerCase().includes('quota') || String(error).toLowerCase().includes('setitem')));
+
+  if (isQuotaError) {
+    alert(
+      "⚠️ Limite de Armazenamento Excedido!\n\n" +
+      "A imagem que você tentou adicionar contém muitos dados e ultrapassou a capacidade máxima de salvamento local do navegador.\n\n" +
+      "Como Corrigir:\n" +
+      "1. Recomendamos usar um link padrão de imagem da internet (ex: do Unsplash).\n" +
+      "2. Ou, então, faça o upload da imagem local usando o botão \"Carregar Arquivo\", que reduz e otimiza o peso da imagem automaticamente de forma inteligente.\n\n" +
+      "As alterações foram aplicadas visualmente na página mas não puderam ser gravadas na memória permanente do navegador até você carregar uma imagem otimizada."
+    );
+  }
+}
+
 // Convert files cleanly with security limit checks & validations
 export function handleFileUpload(
   file: File, 
@@ -201,7 +339,16 @@ export function handleFileUpload(
   const reader = new FileReader();
   reader.onload = (e) => {
     if (e.target?.result) {
-      onSuccess(e.target.result as string);
+      const resultStr = e.target.result as string;
+      if (isImage) {
+        compressImage(
+          resultStr,
+          (compressed) => onSuccess(compressed),
+          (err) => onError(err)
+        );
+      } else {
+        onSuccess(resultStr);
+      }
     } else {
       onError('Falha na leitura cibernética do arquivo.');
     }
@@ -248,4 +395,110 @@ export function saveRomanticTheme(config: RomanticThemeConfig): void {
     console.error('Failed to save romantic theme to storage', e);
   }
 }
+
+const DEFAULT_NATAL_THEME: SpecialCampaignConfig = {
+  active: false,
+  popupText: 'Ho ho ho! O Natal chegou ao Bistrô Violeta. Venha celebrar a magia da época mais iluminada do ano com um banquete inesquecível feito sob medida para sua família!',
+  popupDuration: 5,
+  popupFrequency: 'session',
+  elementPosition: 'right',
+  bannerTitle: 'Natal Mágico no Violeta',
+  bannerSlogan: 'Viva o espírito de luz e partilha com pratos autorais, vinhos finos e decorações acolhedoras.',
+  waMessage: 'Olá! Gostaria de fazer uma reserva especial para as comemorações ou ceia de Natal no Bistrô Violeta.',
+  enableEffect: true,
+};
+
+export function loadNatalTheme(): SpecialCampaignConfig {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.NATAL);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.NATAL, JSON.stringify(DEFAULT_NATAL_THEME));
+      return DEFAULT_NATAL_THEME;
+    }
+    const val = JSON.parse(data);
+    return { ...DEFAULT_NATAL_THEME, ...val };
+  } catch (e) {
+    console.error('Failed to load natal theme from storage', e);
+    return DEFAULT_NATAL_THEME;
+  }
+}
+
+export function saveNatalTheme(config: SpecialCampaignConfig): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.NATAL, JSON.stringify(config));
+  } catch (e) {
+    console.error('Failed to save natal theme to storage', e);
+  }
+}
+
+const DEFAULT_PASCOA_THEME: SpecialCampaignConfig = {
+  active: false,
+  popupText: 'Uma Páscoa doce e sofisticada! Descubra nossos bacalhaus artesanais e as sobremesas gourmet de chocolate belga preparadas exclusivamente por nossa chef.',
+  popupDuration: 5,
+  popupFrequency: 'session',
+  elementPosition: 'left',
+  bannerTitle: 'Páscoa de Sabores no Bistrô',
+  bannerSlogan: 'Celebração com a alta gastronomia rústica e sobremesas especiais de puro chocolate belga.',
+  waMessage: 'Olá! Gostaria de solicitar informações de disponibilidade e reservar mesa para almoço especial de Páscoa.',
+  enableEffect: true,
+};
+
+export function loadPascoaTheme(): SpecialCampaignConfig {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.PASCOA);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.PASCOA, JSON.stringify(DEFAULT_PASCOA_THEME));
+      return DEFAULT_PASCOA_THEME;
+    }
+    const val = JSON.parse(data);
+    return { ...DEFAULT_PASCOA_THEME, ...val };
+  } catch (e) {
+    console.error('Failed to load pascoa theme from storage', e);
+    return DEFAULT_PASCOA_THEME;
+  }
+}
+
+export function savePascoaTheme(config: SpecialCampaignConfig): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PASCOA, JSON.stringify(config));
+  } catch (e) {
+    console.error('Failed to save pascoa theme to storage', e);
+  }
+}
+
+const DEFAULT_ANO_NOVO_THEME: SpecialCampaignConfig = {
+  active: false,
+  popupText: 'Um brinde ao amanhã! Venha celebrar o Réveillon e a chegada de um fascinante Ano Novo no Bistrô Violeta. Espumantes finos, boa música e energia brilhante.',
+  popupDuration: 5,
+  popupFrequency: 'session',
+  elementPosition: 'top-right',
+  bannerTitle: 'Réveillon Dourado Violeta',
+  bannerSlogan: 'Brinde às conquistas futuras com haute cuisine de autoria e espumantes gelados em clima festivo.',
+  waMessage: 'Olá! Gostaria de reservar nossa mesa ou checar o cardápio da virada especial de Ano Novo no bistrô.',
+  enableEffect: true,
+};
+
+export function loadAnoNovoTheme(): SpecialCampaignConfig {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.ANO_NOVO);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.ANO_NOVO, JSON.stringify(DEFAULT_ANO_NOVO_THEME));
+      return DEFAULT_ANO_NOVO_THEME;
+    }
+    const val = JSON.parse(data);
+    return { ...DEFAULT_ANO_NOVO_THEME, ...val };
+  } catch (e) {
+    console.error('Failed to load ano novo theme from storage', e);
+    return DEFAULT_ANO_NOVO_THEME;
+  }
+}
+
+export function saveAnoNovoTheme(config: SpecialCampaignConfig): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ANO_NOVO, JSON.stringify(config));
+  } catch (e) {
+    console.error('Failed to save ano novo theme to storage', e);
+  }
+}
+
 

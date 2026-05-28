@@ -108,10 +108,10 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.04, duration: 0.35 }}
                     onClick={() => handleOrderWine(wine)}
-                    className="group flex flex-col justify-between bg-[#0e0a0b]/90 rounded-xl overflow-hidden border border-gold-800/10 hover:border-gold-400/30 transition-all duration-500 hover:shadow-xl hover:shadow-[#2e0910]/20 cursor-pointer"
+                    className="group flex flex-col justify-between bg-[#0e0a0b]/90 rounded-2xl overflow-hidden border border-gold-800/10 hover:border-gold-400/30 transition-all duration-500 hover:shadow-xl hover:shadow-[#2e0910]/20 cursor-pointer"
                   >
                     {/* Bottle Visual Area */}
-                    <div className="h-72 relative bg-gradient-to-b from-[#150d10] to-[#070506] overflow-hidden flex items-center justify-center p-4">
+                    <div className="h-72 relative bg-gradient-to-b from-[#150d10] to-[#070506] overflow-hidden flex items-center justify-center p-4 rounded-t-2xl">
                       {/* Premium burgundy radial backlit spotlight glow */}
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(114,28,41,0.25)_0%,transparent_65%)] z-0 pointer-events-none"></div>
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0e0a0b] via-transparent to-transparent z-10"></div>

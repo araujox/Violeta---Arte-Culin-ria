@@ -134,21 +134,21 @@ export default function DrinksSection({ whatsAppConfig }: DrinksSectionProps) {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.04, duration: 0.4 }}
                     onClick={() => handleOrderDrink(drink)}
-                    className="group bg-[#0f0a0c] rounded-xl overflow-hidden border border-gold-800/10 hover:border-orange-500/20 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                    className="group bg-[#0f0a0c] rounded-2xl overflow-hidden border border-gold-800/10 hover:border-orange-500/30 transition-all duration-300 flex flex-col justify-between cursor-pointer"
                   >
-                    {/* Visual Card Image Cover with dark overlay */}
-                    <div className="h-48 relative overflow-hidden bg-black">
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a0c] via-transparent to-transparent z-10"></div>
+                    {/* Visual Card Image Cover with dark overlay - Nested Rounded Square Format */}
+                    <div className="aspect-[4/3] relative overflow-hidden bg-[#050304] rounded-2xl m-3 border border-orange-500/10 shadow-md">
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a0c]/85 via-transparent to-transparent z-10"></div>
                       <ImageWithFallback
                         itemName={drink.name}
                         fallbackSrc={drink.image}
                         alt={drink.name}
-                        className="w-full h-full object-cover opacity-45 group-hover:opacity-65 group-hover:scale-105 transition-all duration-700"
+                        className="w-full h-full object-cover scale-102 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                         referrerPolicy="no-referrer"
                       />
                       
                       {/* Signature drink Badge */}
-                      <span className="absolute top-4 left-4 bg-orange-950/80 border border-orange-400/20 text-[9px] uppercase tracking-widest text-orange-200 px-2.5 py-1.5 rounded-md font-mono z-15">
+                      <span className="absolute top-3 left-3 bg-orange-950/85 border border-orange-400/20 text-[9px] uppercase tracking-widest text-orange-200 px-2.5 py-1.5 rounded-md font-mono z-15">
                         {drink.category === 'caipiroscas' ? 'Coquetel e Café' : drink.category === 'cervejas_licores' ? (drink.name === 'Peachtree' || drink.name === 'Licor 43' ? 'Licor Fino' : 'Cerveja Long Neck') : 'Cocktail Clássico'}
                       </span>
                     </div>

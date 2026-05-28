@@ -68,3 +68,18 @@ export interface RomanticThemeConfig {
   startDate?: string;
   endDate?: string;
 }
+
+export interface SpecialCampaignConfig {
+  active: boolean;
+  popupText: string;
+  popupDuration: number; // in seconds, default 5
+  popupFrequency: 'session' | 'always';
+  elementPosition: 'left' | 'right' | 'top-right';
+  bannerTitle?: string;
+  bannerSlogan?: string;
+  waMessage?: string;
+  enableEffect: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+

@@ -149,40 +149,41 @@ export default function FullMenuSection({ whatsAppConfig }: FullMenuSectionProps
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05, duration: 0.4 }}
                   onClick={() => handleItemClick(item)}
-                  className="group flex flex-col sm:flex-row justify-between rounded-lg border border-gold-800/10 bg-[#0c0c0c]/80 hover:bg-[#0c0c0c] hover:border-gold-500/30 transition-all duration-300 cursor-pointer overflow-hidden"
+                  className="group flex flex-row items-center gap-4 p-3 sm:p-4 rounded-2xl border border-gold-800/10 bg-[#0c0c0c]/80 hover:bg-[#120e0e]/90 hover:border-gold-500/30 transition-all duration-300 cursor-pointer overflow-hidden"
                 >
                   {/* Item Image Thumbnail withFallback */}
-                  <div className="w-full sm:w-28 h-40 sm:h-auto relative overflow-hidden shrink-0 bg-black/40 border-b sm:border-b-0 sm:border-r border-gold-800/10">
+                  <div className="w-20 h-20 sm:w-28 sm:h-28 aspect-square relative overflow-hidden shrink-0 bg-[#050304] border border-gold-800/15 rounded-2xl shadow-inner shadow-black">
+                    <div className="absolute inset-0 bg-gradient-to-t from-gold-900/10 to-transparent z-10 pointer-events-none" />
                     <ImageWithFallback
                       itemName={item.name}
                       fallbackSrc={getCategoryFallbackImage(item.category, item.name)}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-85"
+                      className="w-full h-full object-cover scale-102 group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                       referrerPolicy="no-referrer"
                     />
                   </div>
 
                   {/* Item text content */}
-                  <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1 h-20 sm:h-28">
                     <div>
-                      <div className="flex justify-between items-start gap-3 mb-2">
-                        <h4 className="font-serif text-[15px] md:text-base text-[#FCFBF8] tracking-wide group-hover:text-gold-300 font-medium transition-colors line-clamp-1">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <h4 className="font-serif text-[13px] sm:text-base text-[#FCFBF8] tracking-wide group-hover:text-gold-300 font-medium transition-colors line-clamp-1">
                           {item.name}
                         </h4>
-                        <span className="font-serif text-sm md:text-base text-gold-400 font-bold tracking-tight whitespace-nowrap">
+                        <span className="font-serif text-xs sm:text-base text-gold-400 font-bold tracking-tight whitespace-nowrap">
                           R$ {item.price.toFixed(2).replace('.', ',')}
                         </span>
                       </div>
 
-                      <p className="text-[11px] md:text-xs text-[#8E8376] leading-relaxed group-hover:text-[#A89F8F] transition-colors mb-4 line-clamp-2 md:line-clamp-3">
+                      <p className="text-[10px] sm:text-xs text-[#8E8376] leading-snug sm:leading-relaxed group-hover:text-[#A89F8F] transition-colors line-clamp-2">
                         {item.description}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between text-[9px] text-[#555] group-hover:text-gold-500/65 border-t border-gold-800/5 pt-3 uppercase tracking-widest transition-colors font-medium">
+                    <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-[#555] group-hover:text-gold-500/65 border-t border-gold-800/5 pt-1.5 uppercase tracking-widest transition-colors font-medium">
                       <span>Menu Violeta</span>
                       <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        Solicitar Prato <Compass className="w-2.5 h-2.5" />
+                        Reservar <Compass className="w-2.5 h-2.5" />
                       </span>
                     </div>
                   </div>

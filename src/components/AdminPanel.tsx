@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Lock, Eye, EyeOff, Save, LogOut, Plus, Trash2, Edit3, 
   Upload, X, Check, AlertCircle, RefreshCw, Smartphone, 
-  Calendar, Clock, FileText, Image, Video, HelpCircle, ArrowLeft, ToggleLeft, ToggleRight, Heart
+  Calendar, Clock, FileText, Image, Video, HelpCircle, ArrowLeft, ToggleLeft, ToggleRight, Heart,
+  Sparkles, Gift
 } from 'lucide-react';
-import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig } from '../types';
+import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig } from '../types';
 import { handleFileUpload, getEmbedUrl } from '../utils/adminStorage';
 
 interface AdminPanelProps {
@@ -17,6 +18,12 @@ interface AdminPanelProps {
   onSaveWhatsApp: (config: WhatsAppConfig) => void;
   romanticTheme: RomanticThemeConfig;
   onSaveRomanticTheme: (config: RomanticThemeConfig) => void;
+  natalTheme: SpecialCampaignConfig;
+  onSaveNatalTheme: (config: SpecialCampaignConfig) => void;
+  pascoaTheme: SpecialCampaignConfig;
+  onSavePascoaTheme: (config: SpecialCampaignConfig) => void;
+  anoNovoTheme: SpecialCampaignConfig;
+  onSaveAnoNovoTheme: (config: SpecialCampaignConfig) => void;
   onNotify: (msg: string) => void;
 }
 
@@ -30,6 +37,12 @@ export default function AdminPanel({
   onSaveWhatsApp,
   romanticTheme,
   onSaveRomanticTheme,
+  natalTheme,
+  onSaveNatalTheme,
+  pascoaTheme,
+  onSavePascoaTheme,
+  anoNovoTheme,
+  onSaveAnoNovoTheme,
   onNotify
 }: AdminPanelProps) {
   // Authentication states
@@ -40,7 +53,7 @@ export default function AdminPanel({
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Active Admin tab
-  const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic' | 'natal' | 'pascoa' | 'anonovo'>('events');
 
   // Hero form inputs
   const [heroTitle, setHeroTitle] = useState(hero?.title ?? '');
@@ -66,6 +79,39 @@ export default function AdminPanel({
   const [romanticHeartRain, setRomanticHeartRain] = useState(romanticTheme?.enableHeartRain ?? true);
   const [romanticStartDate, setRomanticStartDate] = useState(romanticTheme?.startDate ?? '2026-06-01');
   const [romanticEndDate, setRomanticEndDate] = useState(romanticTheme?.endDate ?? '2026-06-15');
+
+  // Natal Campaign form inputs
+  const [natalActive, setNatalActive] = useState(natalTheme?.active ?? false);
+  const [natalPopupText, setNatalPopupText] = useState(natalTheme?.popupText ?? '');
+  const [natalPopupDuration, setNatalPopupDuration] = useState(natalTheme?.popupDuration ?? 5);
+  const [natalPopupFrequency, setNatalPopupFrequency] = useState(natalTheme?.popupFrequency ?? 'session');
+  const [natalPosition, setNatalPosition] = useState(natalTheme?.elementPosition ?? 'right');
+  const [natalBannerTitle, setNatalBannerTitle] = useState(natalTheme?.bannerTitle ?? '');
+  const [natalBannerSlogan, setNatalBannerSlogan] = useState(natalTheme?.bannerSlogan ?? '');
+  const [natalWaMessage, setNatalWaMessage] = useState(natalTheme?.waMessage ?? '');
+  const [natalEnableEffect, setNatalEnableEffect] = useState(natalTheme?.enableEffect ?? true);
+
+  // Pascoa Campaign form inputs
+  const [pascoaActive, setPascoaActive] = useState(pascoaTheme?.active ?? false);
+  const [pascoaPopupText, setPascoaPopupText] = useState(pascoaTheme?.popupText ?? '');
+  const [pascoaPopupDuration, setPascoaPopupDuration] = useState(pascoaTheme?.popupDuration ?? 5);
+  const [pascoaPopupFrequency, setPascoaPopupFrequency] = useState(pascoaTheme?.popupFrequency ?? 'session');
+  const [pascoaPosition, setPascoaPosition] = useState(pascoaTheme?.elementPosition ?? 'left');
+  const [pascoaBannerTitle, setPascoaBannerTitle] = useState(pascoaTheme?.bannerTitle ?? '');
+  const [pascoaBannerSlogan, setPascoaBannerSlogan] = useState(pascoaTheme?.bannerSlogan ?? '');
+  const [pascoaWaMessage, setPascoaWaMessage] = useState(pascoaTheme?.waMessage ?? '');
+  const [pascoaEnableEffect, setPascoaEnableEffect] = useState(pascoaTheme?.enableEffect ?? true);
+
+  // Ano Novo Campaign form inputs
+  const [anoNovoActive, setAnoNovoActive] = useState(anoNovoTheme?.active ?? false);
+  const [anoNovoPopupText, setAnoNovoPopupText] = useState(anoNovoTheme?.popupText ?? '');
+  const [anoNovoPopupDuration, setAnoNovoPopupDuration] = useState(anoNovoTheme?.popupDuration ?? 5);
+  const [anoNovoPopupFrequency, setAnoNovoPopupFrequency] = useState(anoNovoTheme?.popupFrequency ?? 'session');
+  const [anoNovoPosition, setAnoNovoPosition] = useState(anoNovoTheme?.elementPosition ?? 'top-right');
+  const [anoNovoBannerTitle, setAnoNovoBannerTitle] = useState(anoNovoTheme?.bannerTitle ?? '');
+  const [anoNovoBannerSlogan, setAnoNovoBannerSlogan] = useState(anoNovoTheme?.bannerSlogan ?? '');
+  const [anoNovoWaMessage, setAnoNovoWaMessage] = useState(anoNovoTheme?.waMessage ?? '');
+  const [anoNovoEnableEffect, setAnoNovoEnableEffect] = useState(anoNovoTheme?.enableEffect ?? true);
 
   // Event editing state
   const [isEditingEvent, setIsEditingEvent] = useState(false);
@@ -434,6 +480,30 @@ export default function AdminPanel({
             >
               <Heart className="w-4 h-4 shrink-0" /> Tema Especial (Namorados)
             </button>
+            <button
+              onClick={() => { setActiveTab('natal'); setIsEditingEvent(false); }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
+                activeTab === 'natal' ? 'bg-[#0e7490] text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              }`}
+            >
+              <Gift className="w-4 h-4 shrink-0" /> Tema Especial (Natal)
+            </button>
+            <button
+              onClick={() => { setActiveTab('pascoa'); setIsEditingEvent(false); }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
+                activeTab === 'pascoa' ? 'bg-[#b45309] text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 shrink-0" /> Tema Especial (Páscoa)
+            </button>
+            <button
+              onClick={() => { setActiveTab('anonovo'); setIsEditingEvent(false); }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
+                activeTab === 'anonovo' ? 'bg-amber-400 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 shrink-0" /> Tema Especial (Ano Novo)
+            </button>
           </nav>
         </div>
 
@@ -478,6 +548,9 @@ export default function AdminPanel({
                 {activeTab === 'banner' && 'Personalizar Front Banner'}
                 {activeTab === 'whatsapp' && 'Configurações de Integração WhatsApp'}
                 {activeTab === 'romantic' && 'Tema Especial: Dia dos Namorados'}
+                {activeTab === 'natal' && 'Tema Especial: Natal no Bistrô'}
+                {activeTab === 'pascoa' && 'Tema Especial: Páscoa do Chefe'}
+                {activeTab === 'anonovo' && 'Tema Especial: Réveillon Dourado'}
               </h1>
               <p className="text-xs text-[#8E8376] mt-1">Configure o site em tempo real sem conhecimento técnico de código.</p>
             </div>
@@ -1278,6 +1351,555 @@ export default function AdminPanel({
             </form>
           )}
 
+          {/* TAB 5: CHRISTMAS (NATAL) CAMPAIGN */}
+          {activeTab === 'natal' && (
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSaveNatalTheme({
+                  active: natalActive,
+                  popupText: natalPopupText,
+                  popupDuration: Number(natalPopupDuration),
+                  popupFrequency: natalPopupFrequency,
+                  elementPosition: natalPosition,
+                  bannerTitle: natalBannerTitle,
+                  bannerSlogan: natalBannerSlogan,
+                  waMessage: natalWaMessage,
+                  enableEffect: natalEnableEffect,
+                });
+                onNotify('Campanha de Natal sincronizada e atualizada com sucesso!');
+              }} 
+              className="space-y-6 bg-[#0c0c0c] border border-emerald-500/20 rounded-xl p-6 lg:p-8 relative"
+            >
+              {/* Floating aesthetic pine in card corner */}
+              <div className="absolute top-4 right-4 text-emerald-500/10 text-5xl font-serif pointer-events-none select-none">🎄</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Master Theme Toggle */}
+                <div className="flex items-center justify-between p-4 bg-[#0a1811] border border-emerald-500/25 md:col-span-2 rounded-xl">
+                  <div>
+                    <span className="text-xs text-emerald-100 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <Gift className="w-4 h-4 text-emerald-500 fill-emerald-500" /> Ativar Campanha Temática de Natal
+                    </span>
+                    <span className="text-[10px] text-[#A89895] block mt-1 font-light">
+                      Quando ativado, exibe um acolhedor pop-up natalino, aplica overlays com tons de verde pinho e ouro, ativa uma chuva festiva de neve, e muda os dizeres do banner.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNatalActive(!natalActive)}
+                    className="transition-all cursor-pointer focus:outline-none"
+                  >
+                    {natalActive ? (
+                      <ToggleRight className="w-12 h-12 text-emerald-500" />
+                    ) : (
+                      <ToggleLeft className="w-12 h-12 text-neutral-600" />
+                    )}
+                  </button>
+                </div>
+
+                {natalActive && (
+                  <>
+                    <div className="space-y-1.5 md:col-span-2 border-b border-emerald-950/20 pb-2">
+                      <h4 className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" /> 1. Pop-up Inicial e Efeitos de Neve
+                      </h4>
+                    </div>
+
+                    {/* Pop-up Text */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Frase do Pop-up de Natal *</label>
+                      <textarea 
+                        value={natalPopupText}
+                        onChange={(e) => setNatalPopupText(e.target.value)}
+                        placeholder="Ex: Ho ho ho! Desfrute do melhor menu de festas e viva o espírito natalino..."
+                        required
+                        rows={2}
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light"
+                      />
+                    </div>
+
+                    {/* Duration and Frequency */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Tempo Exposição do Pop-up (segundos)</label>
+                      <input 
+                        type="number" 
+                        min={3}
+                        max={20}
+                        value={natalPopupDuration}
+                        onChange={(e) => setNatalPopupDuration(Number(e.target.value))}
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Frequência de Exibição</label>
+                      <select 
+                        value={natalPopupFrequency}
+                        onChange={(e) => setNatalPopupFrequency(e.target.value as any)}
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none cursor-pointer transition-colors"
+                      >
+                        <option value="session" className="bg-[#121212] text-white">Uma vez por sessão (Recomendado)</option>
+                        <option value="always" className="bg-[#121212] text-white">Sempre (A cada carregamento de página)</option>
+                      </select>
+                    </div>
+
+                    {/* Mascot alignment and Snow toggle */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Alinhamento do Papai Noel Flutuante</label>
+                      <select 
+                        value={natalPosition}
+                        onChange={(e) => setNatalPosition(e.target.value as any)}
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none cursor-pointer transition-colors"
+                      >
+                        <option value="right">Canto Direito Inferior</option>
+                        <option value="left">Canto Esquerdo Inferior</option>
+                        <option value="top-right">Canto Superior Direito</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-[#121212] border border-emerald-950/10 rounded-xl">
+                      <div>
+                        <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest block">Chuva Festiva de Neve</span>
+                        <span className="text-[8px] text-[#8E8376] mt-0.5 block font-light">Ativa flocos de neve elegantes caindo suavemente pela tela.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNatalEnableEffect(!natalEnableEffect)}
+                        className="transition-all cursor-pointer focus:outline-none"
+                      >
+                        {natalEnableEffect ? (
+                          <ToggleRight className="w-10 h-10 text-emerald-500" />
+                        ) : (
+                          <ToggleLeft className="w-10 h-10 text-neutral-600" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Customized Banner Content */}
+                    <div className="space-y-1.5 md:col-span-2 border-b border-emerald-950/20 pt-4 pb-2">
+                      <h4 className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5" /> 2. Textos do Banner Natalino
+                      </h4>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Título Natalino Alternativo</label>
+                      <input 
+                        type="text" 
+                        value={natalBannerTitle}
+                        onChange={(e) => setNatalBannerTitle(e.target.value)}
+                        placeholder="Ex: Natal Mágico no Violeta"
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Slogan de Natal Alternativo</label>
+                      <input 
+                        type="text" 
+                        value={natalBannerSlogan}
+                        onChange={(e) => setNatalBannerSlogan(e.target.value)}
+                        placeholder="Ex: Saboreie as festas com quem você mais ama..."
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    {/* Customized Booking WhatsApp Message Campaign */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Mensagem WhatsApp para Ceia/Reservas de Natal</label>
+                      <input 
+                        type="text" 
+                        value={natalWaMessage}
+                        onChange={(e) => setNatalWaMessage(e.target.value)}
+                        placeholder="Ex: Olá! Gostaria de reservar nossa mesa especial de Natal..."
+                        className="w-full bg-[#121212] border border-emerald-950/20 focus:border-emerald-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </>
+                )}
+
+              </div>
+
+              {/* Submission buttons */}
+              <div className="flex gap-4 justify-end pt-4 border-t border-emerald-950/15">
+                <button
+                  type="submit"
+                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-8 py-3 text-xs uppercase tracking-widest rounded shadow cursor-pointer transition-all flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4 text-white fill-white" /> Salvar Sincronização Tema Natal
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 6: EASTER (PÁSCOA) CAMPAIGN */}
+          {activeTab === 'pascoa' && (
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSavePascoaTheme({
+                  active: pascoaActive,
+                  popupText: pascoaPopupText,
+                  popupDuration: Number(pascoaPopupDuration),
+                  popupFrequency: pascoaPopupFrequency,
+                  elementPosition: pascoaPosition,
+                  bannerTitle: pascoaBannerTitle,
+                  bannerSlogan: pascoaBannerSlogan,
+                  waMessage: pascoaWaMessage,
+                  enableEffect: pascoaEnableEffect,
+                });
+                onNotify('Campanha de Páscoa sincronizada e atualizada com sucesso!');
+              }} 
+              className="space-y-6 bg-[#0c0c0c] border border-amber-600/25 rounded-xl p-6 lg:p-8 relative"
+            >
+              {/* Floating aesthetic egg/bunny icon in corner */}
+              <div className="absolute top-4 right-4 text-amber-500/10 text-5xl font-serif pointer-events-none select-none">🥚</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Master Theme Toggle */}
+                <div className="flex items-center justify-between p-4 bg-[#1e130a] border border-amber-600/30 md:col-span-2 rounded-xl">
+                  <div>
+                    <span className="text-xs text-amber-100 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-500" /> Ativar Campanha Temática de Páscoa
+                    </span>
+                    <span className="text-[10px] text-[#A89895] block mt-1 font-light">
+                      Quando ativado, exibe um belo pop-up sobre os prazeres doces e salgados da data, ativa a queda sutil de ovos decorados e flores, e aplica tons quentes de terra e chocolate ao site.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPascoaActive(!pascoaActive)}
+                    className="transition-all cursor-pointer focus:outline-none"
+                  >
+                    {pascoaActive ? (
+                      <ToggleRight className="w-12 h-12 text-amber-500" />
+                    ) : (
+                      <ToggleLeft className="w-12 h-12 text-neutral-600" />
+                    )}
+                  </button>
+                </div>
+
+                {pascoaActive && (
+                  <>
+                    <div className="space-y-1.5 md:col-span-2 border-b border-amber-950/20 pb-2">
+                      <h4 className="text-[11px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" /> 1. Pop-up Inicial e Decorações Flutuantes
+                      </h4>
+                    </div>
+
+                    {/* Pop-up Text */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Frase do Pop-up de Páscoa *</label>
+                      <textarea 
+                        value={pascoaPopupText}
+                        onChange={(e) => setPascoaPopupText(e.target.value)}
+                        placeholder="Ex: Uma Páscoa de delícias! Venha conferir nossa receita autoral de bacalhau e sobremesas belgas..."
+                        required
+                        rows={2}
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light"
+                      />
+                    </div>
+
+                    {/* Duration and Frequency */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Tempo Exposição do Pop-up (segundos)</label>
+                      <input 
+                        type="number" 
+                        min={3}
+                        max={20}
+                        value={pascoaPopupDuration}
+                        onChange={(e) => setPascoaPopupDuration(Number(e.target.value))}
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Frequência de Exibição</label>
+                      <select 
+                        value={pascoaPopupFrequency}
+                        onChange={(e) => setPascoaPopupFrequency(e.target.value as any)}
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none cursor-pointer transition-colors"
+                      >
+                        <option value="session" className="bg-[#121212] text-white">Uma vez por sessão</option>
+                        <option value="always" className="bg-[#121212] text-white">Sempre (A cada carregamento)</option>
+                      </select>
+                    </div>
+
+                    {/* Mascot alignment and egg rain toggle */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Alinhamento do Coelhinho Flutuante</label>
+                      <select 
+                        value={pascoaPosition}
+                        onChange={(e) => setPascoaPosition(e.target.value as any)}
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none cursor-pointer transition-colors"
+                      >
+                        <option value="left">Canto Esquerdo Inferior</option>
+                        <option value="right">Canto Direito Inferior</option>
+                        <option value="top-right">Canto Superior Direito</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-[#121212] border border-amber-950/10 rounded-xl">
+                      <div>
+                        <span className="text-[10px] text-amber-300 font-bold uppercase tracking-widest block">Chuva de Ovos e Flores</span>
+                        <span className="text-[8px] text-[#8E8376] mt-0.5 block font-light">Ativa flores e ovos de chocolate estilizados descendo muito sutilmente.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPascoaEnableEffect(!pascoaEnableEffect)}
+                        className="transition-all cursor-pointer focus:outline-none"
+                      >
+                        {pascoaEnableEffect ? (
+                          <ToggleRight className="w-10 h-10 text-amber-500" />
+                        ) : (
+                          <ToggleLeft className="w-10 h-10 text-neutral-600" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Customized Banner Content */}
+                    <div className="space-y-1.5 md:col-span-2 border-b border-amber-950/20 pt-4 pb-2">
+                      <h4 className="text-[11px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5" /> 2. Textos do Almoço de Páscoa
+                      </h4>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Título Pascoal Alternativo</label>
+                      <input 
+                        type="text" 
+                        value={pascoaBannerTitle}
+                        onChange={(e) => setPascoaBannerTitle(e.target.value)}
+                        placeholder="Ex: Páscoa de Sabores no Bistrô"
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Slogan de Páscoa Alternativo</label>
+                      <input 
+                        type="text" 
+                        value={pascoaBannerSlogan}
+                        onChange={(e) => setPascoaBannerSlogan(e.target.value)}
+                        placeholder="Ex: Pratos de bacalhau e sobremesas irresistíveis de chocolate belga..."
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    {/* Customized Booking WhatsApp Message Campaign */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Mensagem WhatsApp para Almoço de Páscoa</label>
+                      <input 
+                        type="text" 
+                        value={pascoaWaMessage}
+                        onChange={(e) => setPascoaWaMessage(e.target.value)}
+                        placeholder="Ex: Olá! Gostaria de consultar os horários e reservar uma mesa para a Páscoa..."
+                        className="w-full bg-[#121212] border border-amber-950/20 focus:border-amber-500/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </>
+                )}
+
+              </div>
+
+              {/* Submission buttons */}
+              <div className="flex gap-4 justify-end pt-4 border-t border-amber-950/15">
+                <button
+                  type="submit"
+                  className="bg-amber-700 hover:bg-amber-600 text-white font-bold px-8 py-3 text-xs uppercase tracking-widest rounded shadow cursor-pointer transition-all flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4 text-white fill-white" /> Salvar Sincronização Tema Páscoa
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 7: NEW YEAR (ANO NOVO) CAMPAIGN */}
+          {activeTab === 'anonovo' && (
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSaveAnoNovoTheme({
+                  active: anoNovoActive,
+                  popupText: anoNovoPopupText,
+                  popupDuration: Number(anoNovoPopupDuration),
+                  popupFrequency: anoNovoPopupFrequency,
+                  elementPosition: anoNovoPosition,
+                  bannerTitle: anoNovoBannerTitle,
+                  bannerSlogan: anoNovoBannerSlogan,
+                  waMessage: anoNovoWaMessage,
+                  enableEffect: anoNovoEnableEffect,
+                });
+                onNotify('Campanha de Ano Novo sincronizada e atualizada com sucesso!');
+              }} 
+              className="space-y-6 bg-[#0c0c0c] border border-amber-400/20 rounded-xl p-6 lg:p-8 relative"
+            >
+              {/* Floating aesthetic sparkles in corner */}
+              <div className="absolute top-4 right-4 text-amber-300/10 text-5xl font-serif pointer-events-none select-none">✨</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Master Theme Toggle */}
+                <div className="flex items-center justify-between p-4 bg-[#0a0a18] border border-amber-400/25 md:col-span-2 rounded-xl">
+                  <div>
+                    <span className="text-xs text-amber-100 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-400" /> Ativar Campanha Temática de Ano Novo (2027)
+                    </span>
+                    <span className="text-[10px] text-[#A89895] block mt-1 font-light">
+                      Quando ativado, exibe um festivo pop-up focado nas celebrações de réveillon e no brinde à chegada de 2027. Ativa uma elegante animação dourada de faíscas brilhantes que mimetiza fogos, e muda o slogan do banner.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAnoNovoActive(!anoNovoActive)}
+                    className="transition-all cursor-pointer focus:outline-none"
+                  >
+                    {anoNovoActive ? (
+                      <ToggleRight className="w-12 h-12 text-amber-400" />
+                    ) : (
+                      <ToggleLeft className="w-12 h-12 text-neutral-600" />
+                    )}
+                  </button>
+                </div>
+
+                {anoNovoActive && (
+                  <>
+                    <div className="space-y-1.5 md:col-span-2 border-b border-gold-800/20 pb-2">
+                      <h4 className="text-[11px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" /> 1. Pop-up Inicial e Estrelas Brilhantes (Efeito de Fogos)
+                      </h4>
+                    </div>
+
+                    {/* Pop-up Text */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Frase do Pop-up de Ano Novo *</label>
+                      <textarea 
+                        value={anoNovoPopupText}
+                        onChange={(e) => setAnoNovoPopupText(e.target.value)}
+                        placeholder="Ex: Tim-tim! O Bistrô Violeta convida você para celebrar o Réveillon e brindar a chegada brilhante de 2027..."
+                        required
+                        rows={2}
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light"
+                      />
+                    </div>
+
+                    {/* Duration and Frequency */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Tempo Exposição do Pop-up (segundos)</label>
+                      <input 
+                        type="number" 
+                        min={3}
+                        max={20}
+                        value={anoNovoPopupDuration}
+                        onChange={(e) => setAnoNovoPopupDuration(Number(e.target.value))}
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Frequência de Exibição</label>
+                      <select 
+                        value={anoNovoPopupFrequency}
+                        onChange={(e) => setAnoNovoPopupFrequency(e.target.value as any)}
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none cursor-pointer transition-colors"
+                      >
+                        <option value="session" className="bg-[#121212] text-white">Uma vez por sessão</option>
+                        <option value="always" className="bg-[#121212] text-white">Sempre (A cada carregamento)</option>
+                      </select>
+                    </div>
+
+                    {/* Mascot alignment and sparks toggle */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Alinhamento das Taças de Brinde Flutuantes</label>
+                      <select 
+                        value={anoNovoPosition}
+                        onChange={(e) => setAnoNovoPosition(e.target.value as any)}
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none cursor-pointer transition-colors"
+                      >
+                        <option value="top-right">Canto Superior Direito</option>
+                        <option value="right">Canto Direito Inferior</option>
+                        <option value="left">Canto Esquerdo Inferior</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-[#121212] border border-gold-800/10 rounded-xl">
+                      <div>
+                        <span className="text-[10px] text-amber-200 font-bold uppercase tracking-widest block">Efeito de Faíscas Brilhantes / Estrelas</span>
+                        <span className="text-[8px] text-[#8E8376] mt-0.5 block font-light">Ativa estrelas e faíscas douradas que mimetizam o brilho e elegância dos fogos silenciosos de Réveillon.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAnoNovoEnableEffect(!anoNovoEnableEffect)}
+                        className="transition-all cursor-pointer focus:outline-none"
+                      >
+                        {anoNovoEnableEffect ? (
+                          <ToggleRight className="w-10 h-10 text-amber-400" />
+                        ) : (
+                          <ToggleLeft className="w-10 h-10 text-neutral-600" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Customized Banner Content with upcoming year indicator */}
+                    <div className="space-y-1.5 md:col-span-2 border-b border-gold-800/20 pt-4 pb-2">
+                      <h4 className="text-[11px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5" /> 2. Textos do Réveillon e Indicador do Ano de Chegada (2027)
+                      </h4>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Título Réveillon Alternativo</label>
+                      <input 
+                        type="text" 
+                        value={anoNovoBannerTitle}
+                        onChange={(e) => setAnoNovoBannerTitle(e.target.value)}
+                        placeholder="Ex: Réveillon Dourado Violeta"
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Slogan de Réveillon (Informando o ano de 2027) *</label>
+                      <input 
+                        type="text" 
+                        value={anoNovoBannerSlogan}
+                        onChange={(e) => setAnoNovoBannerSlogan(e.target.value)}
+                        placeholder="Ex: Brinde o amanhã e celebre a fabulosa chegada de 2027..."
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                      <span className="text-[8px] text-amber-400/80 block mt-1">Conforme instrução de design, informe de forma elegante a chegada do ano 2027 para sintonizar a festa!</span>
+                    </div>
+
+                    {/* Customized Booking WhatsApp Message Campaign */}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Mensagem WhatsApp para virada de Ano Novo</label>
+                      <input 
+                        type="text" 
+                        value={anoNovoWaMessage}
+                        onChange={(e) => setAnoNovoWaMessage(e.target.value)}
+                        placeholder="Ex: Olá! Vim pelo site e gostaria de saber as mesas disponíveis para comemorarmos o Réveillon 2027 no bistrô..."
+                        className="w-full bg-[#121212] border border-gold-800/20 focus:border-amber-400/50 rounded p-3 text-sm text-white focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </>
+                )}
+
+              </div>
+
+              {/* Submission buttons */}
+              <div className="flex gap-4 justify-end pt-4 border-t border-gold-800/15">
+                <button
+                  type="submit"
+                  className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-8 py-3 text-xs uppercase tracking-widest rounded shadow cursor-pointer transition-all flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4 text-neutral-950" /> Salvar Sincronização Tema Ano Novo
+                </button>
+              </div>
+            </form>
+          )}
 
         </div>
       </main>
@@ -1285,3 +1907,4 @@ export default function AdminPanel({
     </div>
   );
 }
+
