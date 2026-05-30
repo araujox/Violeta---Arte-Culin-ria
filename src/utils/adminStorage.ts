@@ -1,5 +1,5 @@
-import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig } from '../types';
-import { HERO_IMG } from '../data';
+import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig, MenuItem } from '../types';
+import { HERO_IMG, VIOLETA_MENU } from '../data';
 
 const STORAGE_KEYS = {
   EVENTS: 'violeta_bistro_events',
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   NATAL: 'violeta_bistro_natal',
   PASCOA: 'violeta_bistro_pascoa',
   ANO_NOVO: 'violeta_bistro_anonovo',
+  MENU: 'violeta_bistro_menu',
 };
 
 // Default high-end seeded events matching Violeta's exquisite aesthetic
@@ -152,7 +153,12 @@ export function loadHero(): HeroBanner {
     if (typeof val !== 'object' || val === null) {
       return DEFAULT_HERO_BANNER;
     }
-    return { ...DEFAULT_HERO_BANNER, ...val };
+    const loadedHero = { ...DEFAULT_HERO_BANNER, ...val };
+    if (loadedHero.image && (loadedHero.image.includes('viva_veneto_hero') || loadedHero.image === '')) {
+      loadedHero.image = '/cardapio/banner violeta.png';
+      localStorage.setItem(STORAGE_KEYS.HERO, JSON.stringify(loadedHero));
+    }
+    return loadedHero;
   } catch (e) {
     console.error('Failed to load hero from storage', e);
     return DEFAULT_HERO_BANNER;
@@ -498,6 +504,117 @@ export function saveAnoNovoTheme(config: SpecialCampaignConfig): void {
     localStorage.setItem(STORAGE_KEYS.ANO_NOVO, JSON.stringify(config));
   } catch (e) {
     console.error('Failed to save ano novo theme to storage', e);
+  }
+}
+
+export function loadMenu(): MenuItem[] {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.MENU);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(VIOLETA_MENU));
+      return VIOLETA_MENU;
+    }
+    const val = JSON.parse(data);
+    if (!Array.isArray(val)) {
+      localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(VIOLETA_MENU));
+      return VIOLETA_MENU;
+    }
+    
+    // Smart Migration: Check if any default seeds need update or if we have missing defaults
+    let changed = false;
+    const seedMap = new Map<string, MenuItem>();
+    const seedByName = new Map<string, MenuItem>();
+    
+    for (const item of VIOLETA_MENU) {
+      seedMap.set(item.id, item);
+      seedByName.set(item.name.toLowerCase(), item);
+    }
+
+    const updatedVal: MenuItem[] = [];
+    
+    for (const item of val) {
+      const seedItem = seedMap.get(item.id) || seedByName.get(item.name.toLowerCase());
+      if (seedItem) {
+        // Update images from Unsplash to pristine local ones, or fill missing pairings/anecdotes
+        const isLegacyUnsplash = item.image && item.image.includes('unsplash.com') && seedItem.image.startsWith('/cardapio/');
+        const isMissingFields = !item.pairing || !item.anecdote;
+        
+        if (isLegacyUnsplash || isMissingFields) {
+          updatedVal.push({
+            ...item,
+            image: isLegacyUnsplash ? seedItem.image : item.image,
+            description: item.description || seedItem.description,
+            pairing: item.pairing || seedItem.pairing || '',
+            anecdote: item.anecdote || seedItem.anecdote || '',
+            isChefRecommended: item.isChefRecommended !== undefined ? item.isChefRecommended : seedItem.isChefRecommended
+          });
+          changed = true;
+        } else {
+          updatedVal.push(item);
+        }
+      } else {
+        // Preserve any custom items the user created
+        updatedVal.push(item);
+      }
+    }
+
+    // Insert any missing default seed items
+    const currentNames = new Set(updatedVal.map(i => i.name.toLowerCase()));
+    
+    for (const seedItem of VIOLETA_MENU) {
+      if (!currentNames.has(seedItem.name.toLowerCase())) {
+        updatedVal.push(seedItem);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(updatedVal));
+      return updatedVal;
+    }
+    
+    return val;
+  } catch (e) {
+    console.error('Failed to load menu from storage', e);
+    return VIOLETA_MENU;
+  }
+}
+
+export function saveMenu(menuItems: MenuItem[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(menuItems));
+  } catch (e) {
+    console.error('Failed to save menu to storage', e);
+    // Auto-compress menu pictures if any of them are oversized data URL
+    const oversizedItem = menuItems.find(item => item.image && item.image.startsWith('data:image'));
+    if (oversizedItem) {
+      console.log('Oversized menu image base64, compressing to prevent quota overflow...');
+      const compressionPromises = menuItems.map(item => {
+        return new Promise<MenuItem>((resolve) => {
+          if (item.image && item.image.startsWith('data:image')) {
+            compressImage(
+              item.image,
+              (compressed) => resolve({ ...item, image: compressed }),
+              () => resolve(item)
+            );
+          } else {
+            resolve(item);
+          }
+        });
+      });
+
+      Promise.all(compressionPromises).then(optimizedMenu => {
+        try {
+          localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(optimizedMenu));
+          console.log('Successfully saved menu after quota handling and compression.');
+        } catch (retryErr) {
+          console.error('Failed to save menu even after compression', retryErr);
+          handleStorageQuotaExceeded('violeta_bistro_menu', retryErr);
+        }
+      });
+    } else {
+      handleStorageQuotaExceeded('violeta_bistro_menu', e);
+    }
   }
 }
 

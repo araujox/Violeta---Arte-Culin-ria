@@ -1,7 +1,7 @@
 export interface MenuItem {
   id: string;
   name: string;
-  category: 'entradas' | 'principais' | 'drinks' | 'sobremesas';
+  category: 'entradas' | 'risotos' | 'massas' | 'parmegiana' | 'saladas' | 'sobremesas' | 'almoco' | 'kids' | 'drinks';
   price: number;
   description: string;
   image: string;

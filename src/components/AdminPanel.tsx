@@ -3,12 +3,13 @@ import {
   Lock, Eye, EyeOff, Save, LogOut, Plus, Trash2, Edit3, 
   Upload, X, Check, AlertCircle, RefreshCw, Smartphone, 
   Calendar, Clock, FileText, Image, Video, HelpCircle, ArrowLeft, ToggleLeft, ToggleRight, Heart,
-  Sparkles, Gift
+  Sparkles, Gift, Search
 } from 'lucide-react';
-import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig } from '../types';
+import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig, MenuItem } from '../types';
 import { handleFileUpload, getEmbedUrl } from '../utils/adminStorage';
 
 interface AdminPanelProps {
+  onLightMode?: boolean; // backwards compatibility if any
   onClose: () => void;
   events: EventBistro[];
   onSaveEvents: (events: EventBistro[]) => void;
@@ -24,6 +25,8 @@ interface AdminPanelProps {
   onSavePascoaTheme: (config: SpecialCampaignConfig) => void;
   anoNovoTheme: SpecialCampaignConfig;
   onSaveAnoNovoTheme: (config: SpecialCampaignConfig) => void;
+  menuItems: MenuItem[];
+  onSaveMenuItems: (items: MenuItem[]) => void;
   onNotify: (msg: string) => void;
 }
 
@@ -43,6 +46,8 @@ export default function AdminPanel({
   onSavePascoaTheme,
   anoNovoTheme,
   onSaveAnoNovoTheme,
+  menuItems,
+  onSaveMenuItems,
   onNotify
 }: AdminPanelProps) {
   // Authentication states
@@ -53,7 +58,7 @@ export default function AdminPanel({
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Active Admin tab
-  const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic' | 'natal' | 'pascoa' | 'anonovo'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic' | 'natal' | 'pascoa' | 'anonovo' | 'menu'>('events');
 
   // Hero form inputs
   const [heroTitle, setHeroTitle] = useState(hero?.title ?? '');
@@ -130,6 +135,24 @@ export default function AdminPanel({
   const [evtWhatsappMessage, setEvtWhatsappMessage] = useState('');
   const [evtIsRomanticSpecial, setEvtIsRomanticSpecial] = useState(false);
 
+  // Menu Item editing state
+  const [isEditingMenu, setIsEditingMenu] = useState(false);
+  const [editingMenuItemId, setEditingMenuItemId] = useState<string | null>(null);
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
+  const [menuFilterCategory, setMenuFilterCategory] = useState<'all' | 'entradas' | 'risotos' | 'massas' | 'parmegiana' | 'saladas' | 'sobremesas' | 'almoco' | 'kids' | 'drinks'>('all');
+
+  // Menu Item form inputs
+  const [menuItemName, setMenuItemName] = useState('');
+  const [menuItemPrice, setMenuItemPrice] = useState('');
+  const [menuItemDescription, setMenuItemDescription] = useState('');
+  const [menuItemCategory, setMenuItemCategory] = useState<'entradas' | 'risotos' | 'massas' | 'parmegiana' | 'saladas' | 'sobremesas' | 'almoco' | 'kids' | 'drinks'>('entradas');
+  const [menuItemImage, setMenuItemImage] = useState('');
+  const [menuItemPairing, setMenuItemPairing] = useState('');
+  const [menuItemAnecdote, setMenuItemAnecdote] = useState('');
+  const [menuItemIsChefRecommended, setMenuItemIsChefRecommended] = useState(false);
+
+  const menuFileInputRef = useRef<HTMLInputElement>(null);
+
   // Upload progress simulation or states
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -198,7 +221,7 @@ export default function AdminPanel({
   };
 
   // File upload processing function
-  const startFileUpload = (file: File, type: 'image' | 'video' | 'hero') => {
+  const startFileUpload = (file: File, type: 'image' | 'video' | 'hero' | 'menuItem') => {
     setIsUploading(true);
     setUploadProgress(15);
     setUploadError(null);
@@ -236,6 +259,9 @@ export default function AdminPanel({
             } else if (type === 'hero') {
               setHeroImage(base64Data);
               onNotify('Nova imagem principal do banner importada.');
+            } else if (type === 'menuItem') {
+              setMenuItemImage(base64Data);
+              onNotify('Imagem do prato carregada e otimizada.');
             }
           }, 300);
         },
@@ -355,6 +381,93 @@ export default function AdminPanel({
     setIsEditingEvent(false);
   };
 
+  // Menu list actions
+  const handleCreateNewMenuItemClick = () => {
+    setIsEditingMenu(true);
+    setEditingMenuItemId(null);
+    setMenuItemName('');
+    setMenuItemPrice('');
+    setMenuItemDescription('');
+    setMenuItemCategory('principais');
+    setMenuItemImage('');
+    setMenuItemPairing('');
+    setMenuItemAnecdote('');
+    setMenuItemIsChefRecommended(false);
+    setUploadError(null);
+  };
+
+  const handleEditMenuItemClick = (item: MenuItem) => {
+    setIsEditingMenu(true);
+    setEditingMenuItemId(item.id);
+    setMenuItemName(item.name);
+    setMenuItemPrice(String(item.price));
+    setMenuItemDescription(item.description);
+    setMenuItemCategory(item.category);
+    setMenuItemImage(item.image || '');
+    setMenuItemPairing(item.pairing || '');
+    setMenuItemAnecdote(item.anecdote || '');
+    setMenuItemIsChefRecommended(!!item.isChefRecommended);
+    setUploadError(null);
+  };
+
+  const handleDeleteMenuItem = (id: string) => {
+    if (confirm('Tem certeza de que deseja excluir este prato?')) {
+      const filtered = menuItems.filter(item => item.id !== id);
+      onSaveMenuItems(filtered);
+      onNotify('O prato selecionado foi removido.');
+    }
+  };
+
+  const handleSaveMenuItemForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!menuItemName.trim()) {
+      alert('Por favor, informe o nome do prato.');
+      return;
+    }
+    const priceNum = parseFloat(menuItemPrice.replace(',', '.'));
+    if (isNaN(priceNum) || priceNum <= 0) {
+      alert('Por favor, informe um valor numérico válido.');
+      return;
+    }
+
+    if (editingMenuItemId) {
+      // Edit existing
+      const updated = menuItems.map(item => 
+        item.id === editingMenuItemId 
+          ? { 
+              ...item, 
+              name: menuItemName, 
+              price: priceNum, 
+              description: menuItemDescription, 
+              category: menuItemCategory, 
+              image: menuItemImage || '/cardapio/camarão crocante.jpeg', // fallback if empty
+              pairing: menuItemPairing, 
+              anecdote: menuItemAnecdote, 
+              isChefRecommended: menuItemIsChefRecommended 
+            } 
+          : item
+      );
+      onSaveMenuItems(updated);
+      onNotify('Prato atualizado com sucesso!');
+    } else {
+      // Create new
+      const newItem: MenuItem = {
+        id: `menu-custom-${Date.now()}`,
+        name: menuItemName,
+        price: priceNum,
+        description: menuItemDescription,
+        category: menuItemCategory,
+        image: menuItemImage || '/cardapio/camarão crocante.jpeg',
+        pairing: menuItemPairing,
+        anecdote: menuItemAnecdote,
+        isChefRecommended: menuItemIsChefRecommended
+      };
+      onSaveMenuItems([...menuItems, newItem]);
+      onNotify('Novo prato adicionado ao cardápio!');
+    }
+    setIsEditingMenu(false);
+  };
+
   // Security Gate UI (Login page)
   if (!isAuthenticated) {
     return (
@@ -437,77 +550,85 @@ export default function AdminPanel({
 
   // Admin Dashboard UI (Authenticated)
   return (
-    <div className="fixed inset-0 z-50 bg-[#060606] flex flex-col md:flex-row">
+    <div className="fixed inset-0 z-50 bg-[#060606] flex flex-col md:flex-row overflow-hidden">
       
       {/* 1. Left Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-gold-800/10 p-6 flex flex-col justify-between shrink-0">
-        <div className="space-y-8">
-          <div>
+      <aside className="w-full md:w-64 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-gold-800/10 p-4 md:p-6 flex flex-col justify-between shrink-0">
+        <div className="space-y-4 md:space-y-8">
+          <div className="hidden md:block">
             <h2 className="font-serif text-xl tracking-[0.2em] text-[#FCFBF8] font-bold">VIOLETA</h2>
             <p className="text-[9px] font-sans text-gold-400 tracking-[0.3em] uppercase mt-0.5">Painel de Controle</p>
           </div>
 
-          <nav className="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0">
+          <nav className="flex md:flex-col gap-1.5 md:gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+            <button
+              onClick={() => { setActiveTab('menu'); setIsEditingMenu(false); }}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'menu' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-gold-200 hover:bg-[#121212] border border-gold-500/20 md:border-transparent'
+              }`}
+            >
+              <FileText className="w-4 h-4 shrink-0" /> Cardápio Principal
+            </button>
             <button
               onClick={() => { setActiveTab('events'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'events' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'events' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
               <Calendar className="w-4 h-4 shrink-0" /> Gerenciar Eventos
             </button>
             <button
               onClick={() => { setActiveTab('banner'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'banner' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'banner' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
-              <FileText className="w-4 h-4 shrink-0" /> Editar Banner Principal
+              <FileText className="w-4 h-4 shrink-0" /> Editar Banner
             </button>
             <button
               onClick={() => { setActiveTab('whatsapp'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'whatsapp' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'whatsapp' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
               <Smartphone className="w-4 h-4 shrink-0" /> Canal WhatsApp
             </button>
             <button
               onClick={() => { setActiveTab('romantic'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'romantic' ? 'bg-red-600 text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'romantic' ? 'bg-red-600 text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
-              <Heart className="w-4 h-4 shrink-0" /> Tema Especial (Namorados)
+              <Heart className="w-4 h-4 shrink-0" /> Dia dos Namorados
             </button>
             <button
               onClick={() => { setActiveTab('natal'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'natal' ? 'bg-[#0e7490] text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'natal' ? 'bg-[#0e7490] text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
-              <Gift className="w-4 h-4 shrink-0" /> Tema Especial (Natal)
+              <Gift className="w-4 h-4 shrink-0" /> Tema Natal
             </button>
             <button
               onClick={() => { setActiveTab('pascoa'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'pascoa' ? 'bg-[#b45309] text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'pascoa' ? 'bg-[#b45309] text-white font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
-              <Sparkles className="w-4 h-4 shrink-0" /> Tema Especial (Páscoa)
+              <Sparkles className="w-4 h-4 shrink-0" /> Tema Páscoa
             </button>
             <button
               onClick={() => { setActiveTab('anonovo'); setIsEditingEvent(false); }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs uppercase tracking-wider font-medium shrink-0 transition-colors w-full text-justify cursor-pointer ${
-                activeTab === 'anonovo' ? 'bg-amber-400 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212]'
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'anonovo' ? 'bg-amber-400 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
               }`}
             >
-              <Sparkles className="w-4 h-4 shrink-0" /> Tema Especial (Ano Novo)
+              <Sparkles className="w-4 h-4 shrink-0" /> Tema Ano Novo
             </button>
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-gold-800/10 mt-6 md:mt-0 space-y-4">
+        <div className="hidden md:block pt-6 border-t border-gold-800/10 mt-6 md:mt-0 space-y-4">
           <div className="bg-[#121212] p-3.5 rounded border border-gold-800/5">
             <span className="text-[8px] text-neutral-500 block uppercase tracking-widest font-semibold">Sessão Segura</span>
             <span className="text-[10px] text-gold-400">Usuário: Gerente Violeta</span>
@@ -522,7 +643,7 @@ export default function AdminPanel({
       </aside>
 
       {/* 2. Main Content Board Area */}
-      <main className="flex-1 overflow-y-auto p-6 md:p-10 relative">
+      <main className="flex-1 overflow-y-auto p-4 md:p-10 relative">
         {/* Loader Overlay */}
         {isUploading && (
           <div className="absolute inset-0 bg-[#050505]/90 z-40 flex flex-col items-center justify-center">
@@ -541,9 +662,10 @@ export default function AdminPanel({
         <div className="max-w-4xl mx-auto space-y-6">
           
           {/* Header Title with quick back site toggle */}
-          <div className="flex justify-between items-center pb-4 border-b border-gold-800/10">
+          <div className="flex justify-between items-center pb-4 border-b border-gold-800/10 gap-2">
             <div>
-              <h1 className="font-serif text-2xl text-[#FCFBF8] tracking-widest uppercase">
+              <h1 className="font-serif text-lg md:text-2xl text-[#FCFBF8] tracking-wider md:tracking-widest uppercase">
+                {activeTab === 'menu' && 'Cardápio Digital Violeta'}
                 {activeTab === 'events' && 'Gestão de Próximos Eventos'}
                 {activeTab === 'banner' && 'Personalizar Front Banner'}
                 {activeTab === 'whatsapp' && 'Configurações de Integração WhatsApp'}
@@ -552,15 +674,419 @@ export default function AdminPanel({
                 {activeTab === 'pascoa' && 'Tema Especial: Páscoa do Chefe'}
                 {activeTab === 'anonovo' && 'Tema Especial: Réveillon Dourado'}
               </h1>
-              <p className="text-xs text-[#8E8376] mt-1">Configure o site em tempo real sem conhecimento técnico de código.</p>
+              <p className="text-[10px] md:text-xs text-[#8E8376] mt-1">Configure o site em tempo real sem conhecimento de código.</p>
             </div>
-            <button
-              onClick={onClose}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-gold-800/20 text-[#CCBEA3] text-xs uppercase tracking-widest font-semibold hover:border-gold-400 transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Ver Site
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleLogout}
+                className="md:hidden flex items-center justify-center p-2 rounded border border-red-900/30 text-red-400 hover:bg-red-950/20 transition-all cursor-pointer shrink-0"
+                title="Sair do Painel"
+                type="button"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onClose}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-gold-800/20 text-[#CCBEA3] text-xs uppercase tracking-widest font-semibold hover:border-gold-400 transition-colors cursor-pointer whitespace-nowrap"
+                type="button"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Ver Site</span>
+              </button>
+            </div>
           </div>
+
+          {/* TAB: CARDÁPIO MANAGEMENT */}
+          {activeTab === 'menu' && (
+            <div className="space-y-6">
+              {!isEditingMenu ? (
+                /* list view */
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-[#121212] p-4 rounded-xl border border-gold-800/15">
+                    <span className="text-xs font-semibold text-[#CCBEA3] uppercase">Gestão Fina de Pratos</span>
+                    <button
+                      onClick={handleCreateNewMenuItemClick}
+                      className="flex items-center justify-center gap-2 bg-gold-500 hover:bg-gold-400 text-neutral-950 font-bold text-xs uppercase tracking-widest py-2 px-4 rounded transition-all cursor-pointer"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" /> Novo Prato
+                    </button>
+                  </div>
+
+                  {/* Search and Category Filters */}
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-neutral-500" />
+                      <input
+                        type="text"
+                        placeholder="Buscar pratos por nome..."
+                        value={menuSearchQuery}
+                        onChange={(e) => setMenuSearchQuery(e.target.value)}
+                        className="w-full bg-[#121212]/60 border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 pl-10 text-sm text-[#FCFBF8] focus:outline-none transition-colors"
+                      />
+                    </div>
+                    <div className="flex overflow-x-auto gap-2 pb-1 md:pb-0 scrollbar-hide max-w-full">
+                      {(['all', 'entradas', 'risotos', 'massas', 'parmegiana', 'saladas', 'sobremesas', 'almoco', 'kids', 'drinks'] as const).map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setMenuFilterCategory(cat)}
+                          className={`text-[9px] uppercase tracking-wider font-semibold px-2.5 py-2.5 rounded-lg border transition-colors shrink-0 cursor-pointer ${
+                            menuFilterCategory === cat
+                              ? 'bg-gold-500 text-neutral-950 border-gold-400 font-bold'
+                              : 'bg-neutral-950/20 text-[#CCBEA3] border-gold-800/10 hover:border-gold-500/30'
+                          }`}
+                          type="button"
+                        >
+                          {cat === 'all' && 'Todos'}
+                          {cat === 'entradas' && 'Entradas'}
+                          {cat === 'risotos' && 'Risotos'}
+                          {cat === 'massas' && 'Massas'}
+                          {cat === 'parmegiana' && 'Parmegianas'}
+                          {cat === 'saladas' && 'Saladas'}
+                          {cat === 'sobremesas' && 'Sobremesas'}
+                          {cat === 'almoco' && 'Almoço'}
+                          {cat === 'kids' && 'Kids'}
+                          {cat === 'drinks' && 'Drinks'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dishes Cards Grid / List */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {menuItems
+                      .filter(item => {
+                        const matchesCategory = menuFilterCategory === 'all' || item.category === menuFilterCategory;
+                        const matchesSearch = item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) || 
+                                              item.description.toLowerCase().includes(menuSearchQuery.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                      })
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-[#0b0b0b] border border-gold-800/10 hover:border-gold-500/20 p-4 rounded-xl flex items-start gap-4 transition-colors relative group"
+                        >
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-neutral-950 border border-gold-800/10 shadow relative">
+                            {item.isChefRecommended && (
+                              <span className="absolute top-1 left-1 bg-gold-500 text-neutral-950 text-[7px] font-bold px-1 py-0.5 rounded uppercase tracking-wider shadow z-10">
+                                Chef
+                              </span>
+                            )}
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+
+                          <div className="flex-1 space-y-1">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <h4 className="font-serif text-[#FCFBF8] text-sm tracking-wide font-medium">{item.name}</h4>
+                                <span className="inline-block bg-neutral-900 border border-gold-800/10 text-neutral-400 text-[8px] uppercase tracking-widest px-1.5 py-0.5 rounded-md mt-0.5 font-bold">
+                                  {item.category}
+                                </span>
+                              </div>
+                              <span className="font-mono text-xs font-bold text-gold-400 min-w-fit">R$ {item.price},00</span>
+                            </div>
+
+                            <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">{item.description}</p>
+
+                            {item.pairing && (
+                              <p className="text-[9px] text-[#A69B85] italic mt-1 line-clamp-1">🍷 Harmonização: {item.pairing}</p>
+                            )}
+
+                            <div className="flex gap-2 justify-end pt-3 mt-1 border-t border-gold-800/5">
+                              <button
+                                onClick={() => handleEditMenuItemClick(item)}
+                                className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-[#CCBEA3] hover:text-gold-400 font-semibold p-1 transition-colors cursor-pointer border border-transparent"
+                                type="button"
+                              >
+                                <Edit3 className="w-3.5 h-3.5 text-[#CCBEA3]" /> Editar
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMenuItem(item.id)}
+                                className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-red-500 hover:text-red-300 font-semibold p-1 transition-colors cursor-pointer border border-transparent"
+                                type="button"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-red-500" /> Excluir
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {menuItems.filter(item => {
+                    const matchesCategory = menuFilterCategory === 'all' || item.category === menuFilterCategory;
+                    const matchesSearch = item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) || 
+                                          item.description.toLowerCase().includes(menuSearchQuery.toLowerCase());
+                    return matchesCategory && matchesSearch;
+                  }).length === 0 && (
+                    <div className="bg-[#121212]/30 border border-gold-800/5 rounded-xl p-8 text-center text-neutral-500">
+                      Nenhum prato correspondente encontrado para os filtros selecionados.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Edit Form view */
+                <form onSubmit={handleSaveMenuItemForm} className="space-y-6 bg-[#0a0a0a] border border-gold-800/10 rounded-xl p-5 md:p-6 text-justify">
+                  <div className="flex justify-between items-center pb-4 border-b border-gold-800/10">
+                    <h3 className="font-serif text-sm text-[#FCFBF8] tracking-widest uppercase font-semibold">
+                      {editingMenuItemId ? 'Modificar Detalhes do Prato' : 'Adicionar Novo Prato Primoroso'}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingMenu(false)}
+                      className="text-[#CCBEA3] hover:text-[#FCFBF8] text-xs uppercase tracking-widest font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" /> Cancelar
+                    </button>
+                  </div>
+
+                  {/* Form fields layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    {/* General properties */}
+                    <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Nome do Prato *</label>
+                        <input
+                          type="text"
+                          value={menuItemName}
+                          onChange={(e) => setMenuItemName(e.target.value)}
+                          placeholder="Ex: Wellington de Mignon Violeta"
+                          required
+                          className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 text-sm text-white focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Preço (R$) *</label>
+                          <input
+                            type="text"
+                            value={menuItemPrice}
+                            onChange={(e) => setMenuItemPrice(e.target.value)}
+                            placeholder="Ex: 89"
+                            required
+                            className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 text-sm text-white focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Categoria *</label>
+                          <select
+                            value={menuItemCategory}
+                            onChange={(e) => setMenuItemCategory(e.target.value as any)}
+                            className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 text-sm text-white focus:outline-none transition-colors"
+                          >
+                            <option value="entradas">Entradas</option>
+                            <option value="risotos">Risotos</option>
+                            <option value="massas">Massas (Fettuccine, Tagliatelle)</option>
+                            <option value="parmegiana">Parmegianas</option>
+                            <option value="saladas">Saladas</option>
+                            <option value="sobremesas">Sobremesas</option>
+                            <option value="almoco">Almoço Executivo</option>
+                            <option value="kids">Kids</option>
+                            <option value="drinks">Drinks e Coquetéis</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Descrição *</label>
+                        <textarea
+                          rows={3}
+                          value={menuItemDescription}
+                          onChange={(e) => setMenuItemDescription(e.target.value)}
+                          placeholder="Ex: Filezinho mignon grelhado ao molho madeira denso com crosta de pistaches..."
+                          required
+                          className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 text-sm text-white focus:outline-none transition-colors resize-none"
+                        ></textarea>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Harmonização sugerida</label>
+                        <input
+                          type="text"
+                          value={menuItemPairing}
+                          onChange={(e) => setMenuItemPairing(e.target.value)}
+                          placeholder="Ex: Cabernet Sauvignon Envelhecido em Carvalho"
+                          className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 text-sm text-white focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Anedota / História de Origem do Prato</label>
+                        <input
+                          type="text"
+                          value={menuItemAnecdote}
+                          onChange={(e) => setMenuItemAnecdote(e.target.value)}
+                          placeholder="Ex: Desenvolvida na Toscana com tomates marinados por 24 horas..."
+                          className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-3 text-sm text-white focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3 bg-neutral-950 border border-gold-800/10 p-3 rounded-lg">
+                        <input
+                          type="checkbox"
+                          id="chef_rec"
+                          checked={menuItemIsChefRecommended}
+                          onChange={(e) => setMenuItemIsChefRecommended(e.target.checked)}
+                          className="w-4 h-4 rounded text-gold-500 focus:ring-0 bg-[#121212] border-gold-800/20 cursor-pointer"
+                        />
+                        <label htmlFor="chef_rec" className="text-xs text-[#FCFBF8] font-bold select-none cursor-pointer">
+                          ⭐ Recomendado pelo Chef (Destacar no Cardápio)
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Image handling & custom upload gallery picker */}
+                    <div className="space-y-4">
+                      
+                      {/* Image Preview Box */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold block">Imagem Escolhida (Preview)</label>
+                        <div className="w-full h-44 bg-neutral-950 border border-gold-800/15 rounded-xl overflow-hidden relative flex items-center justify-center">
+                          {menuItemImage ? (
+                            <>
+                              <img
+                                src={menuItemImage}
+                                alt="Previa"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setMenuItemImage('')}
+                                className="absolute top-2 right-2 bg-black/65 hover:bg-black/90 p-1.5 rounded-full text-[#CCBEA3] transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="text-center p-4">
+                              <Image className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
+                              <span className="text-neutral-500 text-xs">Selecione uma imagem de alta definição abaixo ou faça upload</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* File upload inputs */}
+                      <div className="grid grid-cols-1 gap-4">
+                        
+                        {/* Device File selection */}
+                        <div className="space-y-1">
+                          <span className="text-[9px] uppercase tracking-wider text-neutral-500 font-bold block">1. Carregar Foto do Celular ou Computador</span>
+                          <input
+                            type="file"
+                            ref={menuFileInputRef}
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) startFileUpload(file, 'menuItem');
+                            }}
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => menuFileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-2 border border-dashed border-gold-800/20 bg-neutral-950 hover:bg-neutral-900 border-[#CCBEA3]/40 text-[#CCBEA3] py-2 px-4 rounded-lg text-xs uppercase tracking-wider font-semibold hover:border-gold-400 transition-all cursor-pointer"
+                          >
+                            <Upload className="w-3.5 h-3.5 font-bold" /> Fazer Upload Local (Garantia de Qualidade)
+                          </button>
+                        </div>
+
+                        {/* Paste Direct URL */}
+                        <div className="space-y-1">
+                          <span className="text-[9px] uppercase tracking-wider text-neutral-500 font-bold block">2. Inserir Link Direto (URL Web)</span>
+                          <input
+                            type="text"
+                            value={menuItemImage}
+                            onChange={(e) => setMenuItemImage(e.target.value)}
+                            placeholder="Ex: https://images.unsplash.com/photo-..."
+                            className="w-full bg-[#121212] border border-gold-800/15 focus:border-gold-500/50 rounded-lg p-2.5 text-xs text-white focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        {/* Classic Bistro Imagery list combo dropdown picker */}
+                        <div className="space-y-1">
+                          <span className="text-[9px] uppercase tracking-wider text-neutral-500 font-bold block">3. Usar Clássico do Acervo Violeta (Imagens Pré-Carregadas)</span>
+                          <div className="grid grid-cols-4 gap-1.5 max-h-28 overflow-y-auto border border-gold-800/10 p-2 rounded-lg bg-neutral-950/40 scrollbar-hide">
+                            {[
+                              { path: '/cardapio/camarão crocante.jpeg', label: 'Camarão Crocante' },
+                              { path: '/cardapio/parmegiana.jpeg', label: 'Parmegiana' },
+                              { path: '/cardapio/brusqueta.jpeg', label: 'Brusquetta' },
+                              { path: '/cardapio/risoto de camarão.jpeg', label: 'Risoto de Camarão' },
+                              { path: '/cardapio/risoto de limão siciliano.jpeg', label: 'Risoto de Limão' },
+                              { path: '/cardapio/risoto gorgonzola.jpeg', label: 'Risoto Gorgonzola' },
+                              { path: '/cardapio/risoto parmesão.jpeg', label: 'Risoto Parmesão' },
+                              { path: '/cardapio/risoto alcafrão.jpeg', label: 'Risoto Açafrão' },
+                              { path: '/cardapio/polvo ao arroz negro.jpeg', label: 'Polvo Negro' },
+                              { path: '/cardapio/salada file.jpeg', label: 'Salada de Filé' },
+                              { path: '/cardapio/sonho salgado.jpeg', label: 'Sonho Salgado' },
+                              { path: '/cardapio/tagliate.jpeg', label: 'Tagliata' },
+                              { path: '/cardapio/torta basca.jpeg', label: 'Torta Basca' },
+                              { path: '/cardapio/vinagrete de polvo.jpeg', label: 'Vinagrete Polvo' },
+                              { path: '/cardapio/queijadinha.jpeg', label: 'Queijadinha' },
+                              { path: '/cardapio/cocada.jpeg', label: 'Cocada' },
+                              { path: '/cardapio/Fetuccine Cogumelo.jpeg', label: 'Fettuccine Cogumelo' },
+                              { path: '/cardapio/alfredo.jpeg', label: 'Alfredo' },
+                              { path: '/cardapio/cracker de ceviche.jpeg', label: 'Cracker Ceviche' },
+                              { path: '/cardapio/mousseline.jpeg', label: 'Mousseline' },
+                              { path: '/cardapio/VLT - Risoto de Gorgonzola - 02.png', label: 'Gorgonzola VLT' }
+                            ].map((img) => (
+                              <button
+                                key={img.path}
+                                type="button"
+                                onClick={() => setMenuItemImage(img.path)}
+                                className={`h-11 rounded-md overflow-hidden relative cursor-pointer border-2 transition-all ${
+                                  menuItemImage === img.path ? 'border-gold-500 scale-95 shadow-md shadow-gold-500/20' : 'border-transparent opacity-65 hover:opacity-100'
+                                }`}
+                                title={img.label}
+                              >
+                                <img
+                                  src={img.path}
+                                  alt={img.label}
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                                <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[6px] text-white truncate px-1 block text-center">
+                                  {img.label}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {/* Submit button layout */}
+                  <div className="flex gap-4 justify-end pt-4 border-t border-gold-800/10">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingMenu(false)}
+                      className="border border-neutral-800 hover:border-gold-800/30 text-neutral-400 font-semibold px-6 py-2.5 text-xs uppercase tracking-widest rounded transition-all cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-gold-500 hover:bg-gold-400 text-neutral-950 font-bold px-8 py-2.5 text-xs uppercase tracking-widest rounded shadow transition-all cursor-pointer"
+                    >
+                      Salvar Prato
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
 
           {/* TAB 1: EVENTS MANAGEMENT */}
           {activeTab === 'events' && (

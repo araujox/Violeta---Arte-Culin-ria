@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MENU_CATEGORIES, FULL_MENU_ITEMS, FullMenuItem } from '../utils/menuAndWineData';
-import { WhatsAppConfig } from '../types';
+import { MENU_CATEGORIES } from '../utils/menuAndWineData';
+import { WhatsAppConfig, MenuItem } from '../types';
 import { Send, FileText, ChevronRight, Sparkles, Compass, Utensils } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
 
 interface FullMenuSectionProps {
+  menuItems: MenuItem[];
   whatsAppConfig?: WhatsAppConfig;
+  onItemClick?: (item: MenuItem) => void;
 }
 
 const getCategoryFallbackImage = (category: string, name: string): string => {
@@ -35,12 +37,12 @@ const getCategoryFallbackImage = (category: string, name: string): string => {
   }
 };
 
-export default function FullMenuSection({ whatsAppConfig }: FullMenuSectionProps) {
+export default function FullMenuSection({ menuItems, whatsAppConfig, onItemClick }: FullMenuSectionProps) {
   const [activeCategory, setActiveCategory] = useState<string>('entradas');
   const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const activeCategoryInfo = MENU_CATEGORIES.find(c => c.id === activeCategory);
-  const filteredItems = FULL_MENU_ITEMS.filter(item => item.category === activeCategory);
+  const filteredItems = (menuItems || []).filter(item => item.category === activeCategory);
 
   const handleWhatsAppCTA = () => {
     const phone = whatsAppConfig?.number || "5581988070000";
@@ -50,12 +52,16 @@ export default function FullMenuSection({ whatsAppConfig }: FullMenuSectionProps
     window.open(url, '_blank');
   };
 
-  const handleItemClick = (item: FullMenuItem) => {
-    const phone = whatsAppConfig?.number || "5581988070000";
-    const cleanPhone = phone.replace(/\D/g, '');
-    const message = `Olá! Gostaria de fazer uma reserva de mesa e incluir este prato em nossa noite: *${item.name}* (R$ ${item.price.toFixed(2)})!`;
-    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  const handleItemClick = (item: MenuItem) => {
+    if (onItemClick) {
+      onItemClick(item);
+    } else {
+      const phone = whatsAppConfig?.number || "5581988070000";
+      const cleanPhone = phone.replace(/\D/g, '');
+      const message = `Olá! Gostaria de fazer uma reserva de mesa e incluir este prato em nossa noite: *${item.name}* (R$ ${item.price.toFixed(2)})!`;
+      const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -156,7 +162,7 @@ export default function FullMenuSection({ whatsAppConfig }: FullMenuSectionProps
                     <div className="absolute inset-0 bg-gradient-to-t from-gold-900/10 to-transparent z-10 pointer-events-none" />
                     <ImageWithFallback
                       itemName={item.name}
-                      fallbackSrc={getCategoryFallbackImage(item.category, item.name)}
+                      fallbackSrc={item.image || getCategoryFallbackImage(item.category, item.name)}
                       alt={item.name}
                       className="w-full h-full object-cover scale-102 group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                       referrerPolicy="no-referrer"

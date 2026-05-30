@@ -3,6 +3,13 @@ import React, { useState, useEffect } from 'react';
 // Explicit list of files that exist on disk in the /public/cardapio directory
 const CARDAPIO_FILES = [
   'Fetuccine Cogumelo.jpeg',
+  'VLT - Risoto de Gorgonzola - 02.png',
+  'VLT - Risoto Camarão - 05.jpg',
+  'VLT - Risoto Camarão - 05-1.jpg',
+  'VLT - Risoto Parmesão - 07 (1).jpg',
+  'VLT - Risoto Parmesão - 07 (1)-1.jpg',
+  'VLT - Tagliatele - 01.png',
+  'VLT - Tagliatele - 01-1.png',
   'alfredo.jpeg',
   'brusqueta.jpeg',
   'camarão crocante.jpeg',
@@ -64,11 +71,15 @@ const SPECIAL_MAPPINGS: Record<string, string> = {
   'carbonara': 'vinhos/carbonara.jpeg', // mapped to brand-new location in wine subfolder
   'fettuccine ao pesto': 'pesto.jpeg',
   'mousseline prime': 'mousseline.jpeg',
-  'tagliatelle': 'tagliate.jpeg',
+  'tagliatelle': 'VLT - Tagliatele - 01.png',
+  'tagliate': 'VLT - Tagliatele - 01.png',
   'fettuccine alfredo': 'alfredo.jpeg',
   'salada de file mignon': 'salada file.jpeg',
   'cocada de forno': 'cocada.jpeg',
   'torta basca cremosa': 'torta basca.jpeg',
+  'risoto de camarao': 'VLT - Risoto Camarão - 05.jpg',
+  'risoto de parmesao': 'VLT - Risoto Parmesão - 07 (1).jpg',
+  'risoto de gorgonzola': 'VLT - Risoto de Gorgonzola - 02.png'
 };
 
 const SPECIAL_WINE_MAPPINGS: Record<string, string> = {
@@ -160,8 +171,38 @@ export default function ImageWithFallback({ itemName, fallbackSrc, className, ..
     const matchedPath = getLocalImagePath(itemName);
 
     const candidates: string[] = [];
+    
+    // Check if the current fallback is a legacy placeholder from Unsplash
+    const isLegacyUnsplash = fallbackSrc && fallbackSrc.includes('unsplash.com');
+    
+    // If it is NOT a legacy placeholder, prioritize the specified fallbackSrc (which could be a custom upload, web link, or explicitly set local file)
+    if (fallbackSrc && !isLegacyUnsplash) {
+      candidates.push(fallbackSrc);
+    }
+
     if (matchedPath) {
       candidates.push(matchedPath);
+    }
+
+    // Add old version fallback candidates for newly customized user dishes
+    const normName = itemName.toLowerCase().trim();
+    const normStripped = normName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    
+    if (normStripped === 'risoto de camarao') {
+      candidates.push('/cardapio/VLT - Risoto Camarão - 05.jpg');
+      candidates.push('/cardapio/VLT - Risoto Camarão - 05-1.jpg');
+      candidates.push('/cardapio/risoto de camarão.jpeg');
+    } else if (normStripped === 'risoto de parmesao') {
+      candidates.push('/cardapio/VLT - Risoto Parmesão - 07 (1).jpg');
+      candidates.push('/cardapio/VLT - Risoto Parmesão - 07 (1)-1.jpg');
+      candidates.push('/cardapio/risoto parmesão.jpeg');
+    } else if (normStripped === 'tagliatelle') {
+      candidates.push('/cardapio/VLT - Tagliatele - 01.png');
+      candidates.push('/cardapio/VLT - Tagliatele - 01-1.png');
+      candidates.push('/cardapio/tagliate.jpeg');
+    } else if (normStripped === 'risoto de gorgonzola') {
+      candidates.push('/cardapio/VLT - Risoto de Gorgonzola - 02.png');
+      candidates.push('/cardapio/risoto gorgonzola.jpeg');
     }
 
     // Standard slug lookups
@@ -180,8 +221,10 @@ export default function ImageWithFallback({ itemName, fallbackSrc, className, ..
     candidates.push(`/cardapio/${cleanName}.jpeg`);
     candidates.push(`/cardapio/${itemName}.jpeg`);
 
-    // Standard fallback image
-    candidates.push(fallbackSrc);
+    // Standard fallback image at the end
+    if (fallbackSrc) {
+      candidates.push(fallbackSrc);
+    }
 
     // Filter duplicates
     const uniqueCandidates = Array.from(new Set(candidates)).filter(Boolean);

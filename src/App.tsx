@@ -20,7 +20,8 @@ import {
   loadRomanticTheme, saveRomanticTheme,
   loadNatalTheme, saveNatalTheme,
   loadPascoaTheme, savePascoaTheme,
-  loadAnoNovoTheme, saveAnoNovoTheme
+  loadAnoNovoTheme, saveAnoNovoTheme,
+  loadMenu, saveMenu
 } from './utils/adminStorage';
 import EventsSection from './components/EventsSection';
 import AdminPanel from './components/AdminPanel';
@@ -227,6 +228,7 @@ export default function App() {
   const [natalTheme, setNatalTheme] = useState(() => loadNatalTheme());
   const [pascoaTheme, setPascoaTheme] = useState(() => loadPascoaTheme());
   const [anoNovoTheme, setAnoNovoTheme] = useState(() => loadAnoNovoTheme());
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => loadMenu());
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Monitor location hashes for hidden navigation entries
@@ -246,6 +248,11 @@ export default function App() {
   const handleSaveEvents = (newEvents: EventBistro[]) => {
     setEvents(newEvents);
     saveEvents(newEvents);
+  };
+
+  const handleSaveMenuItems = (newMenuItems: MenuItem[]) => {
+    setMenuItems(newMenuItems);
+    saveMenu(newMenuItems);
   };
 
   const handleSaveHero = (newHero: HeroBanner) => {
@@ -481,8 +488,8 @@ export default function App() {
 
             <div className="md:col-span-8 group relative overflow-hidden rounded-lg gold-gradient-border shadow-xl">
               <img 
-                src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&q=80&w=900" 
-                alt="Chef preparing signature plates" 
+                src="/cardapio/ambiente vl.png" 
+                alt="Ambiente Violeta - Arte Culinária" 
                 className="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"
               />
@@ -569,7 +576,7 @@ export default function App() {
 
           {/* Grid Layout Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-            {VIOLETA_MENU
+            {menuItems
               .filter(item => item.category === activeMenuTab)
               .map((item) => (
                 <div 
@@ -645,13 +652,21 @@ export default function App() {
       </section>
 
       {/* Cardápio Completo Section */}
-      <FullMenuSection whatsAppConfig={whatsAppConfig} />
+      <FullMenuSection 
+        menuItems={menuItems} 
+        whatsAppConfig={whatsAppConfig} 
+        onItemClick={setSelectedMenuItem} 
+      />
 
       {/* Adega de Vinhos Section */}
       <WineCellarSection whatsAppConfig={whatsAppConfig} />
 
       {/* Drinks Section */}
-      <DrinksSection whatsAppConfig={whatsAppConfig} />
+      <DrinksSection 
+        menuItems={menuItems} 
+        whatsAppConfig={whatsAppConfig} 
+        onItemClick={setSelectedMenuItem} 
+      />
 
       {/* 4. Detail Dish modal overlay */}
       {selectedMenuItem && (
@@ -833,6 +848,8 @@ export default function App() {
           onSavePascoaTheme={handleSavePascoaTheme}
           anoNovoTheme={anoNovoTheme || undefined}
           onSaveAnoNovoTheme={handleSaveAnoNovoTheme}
+          menuItems={menuItems}
+          onSaveMenuItems={handleSaveMenuItems}
           onNotify={triggerNotification}
         />
       )}

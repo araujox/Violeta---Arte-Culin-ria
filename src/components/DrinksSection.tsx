@@ -1,25 +1,46 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DRINK_ITEMS, DrinkItem } from '../utils/menuAndWineData';
-import { WhatsAppConfig } from '../types';
+import { WhatsAppConfig, MenuItem } from '../types';
 import { GlassWater, Coffee, Sparkles, Send, Flame, Compass, Beer } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
 
 interface DrinksSectionProps {
+  menuItems: MenuItem[];
   whatsAppConfig?: WhatsAppConfig;
+  onItemClick?: (item: MenuItem) => void;
 }
 
-export default function DrinksSection({ whatsAppConfig }: DrinksSectionProps) {
+export default function DrinksSection({ menuItems, whatsAppConfig, onItemClick }: DrinksSectionProps) {
   const [activeCategory, setActiveCategory] = useState<'classicos' | 'caipiroscas' | 'cervejas_licores'>('classicos');
 
-  const filteredDrinks = DRINK_ITEMS.filter(drink => drink.category === activeCategory);
+  // Filter only items belonging to category 'drinks'
+  const allDrinksFromState = (menuItems || []).filter(item => item.category === 'drinks');
 
-  const handleOrderDrink = (drink: DrinkItem) => {
-    const phone = whatsAppConfig?.number || "5581988070000";
-    const cleanPhone = phone.replace(/\D/g, '');
-    const message = `Olá! Gostaria de reservar uma mesa e incluir em nosso atendimento o drink: *${drink.name}* (R$ ${drink.price.toFixed(2).replace('.', ',')})!`;
-    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  const filteredDrinks = allDrinksFromState.filter(drink => {
+    const id = drink.id;
+    const nameLower = drink.name.toLowerCase();
+    
+    if (activeCategory === 'caipiroscas') {
+      return id.includes('caip') || nameLower.includes('caipirosca') || nameLower.includes('expresso') || nameLower.includes('café');
+    }
+    if (activeCategory === 'cervejas_licores') {
+      return id.includes('lc') || nameLower.includes('licor') || nameLower.includes('stella') || nameLower.includes('budweiser') || nameLower.includes('heineken') || nameLower.includes('cerveja');
+    }
+    // Clássicos: o resto
+    return !id.includes('caip') && !nameLower.includes('caipirosca') && !nameLower.includes('expresso') && !nameLower.includes('café') &&
+           !id.includes('lc') && !nameLower.includes('licor') && !nameLower.includes('stella') && !nameLower.includes('budweiser') && !nameLower.includes('heineken') && !nameLower.includes('cerveja');
+  });
+
+  const handleOrderDrink = (drink: MenuItem) => {
+    if (onItemClick) {
+      onItemClick(drink);
+    } else {
+      const phone = whatsAppConfig?.number || "5581988070000";
+      const cleanPhone = phone.replace(/\D/g, '');
+      const message = `Olá! Gostaria de reservar uma mesa e incluir em nosso atendimento o drink: *${drink.name}* (R$ ${drink.price.toFixed(2).replace('.', ',')})!`;
+      const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -149,7 +170,7 @@ export default function DrinksSection({ whatsAppConfig }: DrinksSectionProps) {
                       
                       {/* Signature drink Badge */}
                       <span className="absolute top-3 left-3 bg-orange-950/85 border border-orange-400/20 text-[9px] uppercase tracking-widest text-orange-200 px-2.5 py-1.5 rounded-md font-mono z-15">
-                        {drink.category === 'caipiroscas' ? 'Coquetel e Café' : drink.category === 'cervejas_licores' ? (drink.name === 'Peachtree' || drink.name === 'Licor 43' ? 'Licor Fino' : 'Cerveja Long Neck') : 'Cocktail Clássico'}
+                        {drink.id.includes('caip') ? 'Coquetel e Café' : drink.id.includes('lc') ? (drink.name === 'Peachtree' || drink.name === 'Licor 43' ? 'Licor Fino' : 'Cerveja Long Neck') : 'Cocktail Clássico'}
                       </span>
                     </div>
 
