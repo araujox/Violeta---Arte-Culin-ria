@@ -1,4 +1,4 @@
-import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig, MenuItem } from '../types';
+import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig, MenuItem, ExperienceConfig } from '../types';
 import { HERO_IMG, VIOLETA_MENU } from '../data';
 
 const STORAGE_KEYS = {
@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   PASCOA: 'violeta_bistro_pascoa',
   ANO_NOVO: 'violeta_bistro_anonovo',
   MENU: 'violeta_bistro_menu',
+  EXPERIENCE: 'violeta_bistro_experience',
 };
 
 // Default high-end seeded events matching Violeta's exquisite aesthetic
@@ -617,5 +618,47 @@ export function saveMenu(menuItems: MenuItem[]): void {
     }
   }
 }
+
+const DEFAULT_EXPERIENCE: ExperienceConfig = {
+  tag: '01 / Conceito de Autoria',
+  title: 'A Fusão do Clássico e Sensibilidade',
+  paragraph1: 'O Violeta - Arte Culinária nasce da paixão de traduzir ingredientes regionais nobres em quadros comestíveis. Em nosso espaço acolhedor e intimista, cada prato é uma expressão poética inspirada em técnicas de redução e caramelização contemporâneas.',
+  paragraph2: 'Trabalhamos com cortes nobres como o Ancho Angus, risotos emulsificados com queijo mascarpone e flores comestíveis que homenageiam o tom violeta de nossa marca. Em harmonia com as luzes de velas e o silêncio suntuoso, sua visita se torna inesquecível.',
+  image: '/cardapio/ambiente vl.png',
+  stat1Value: '100%',
+  stat1Label: 'Ingredientes Frescos',
+  stat2Value: 'Autoral',
+  stat2Label: 'Menu Sazonal',
+  stat3Value: 'VIP',
+  stat3Label: 'Atendimento Reservado',
+  tagFontSize: 'text-xs',
+  titleFontSize: 'text-3xl md:text-5xl',
+  paragraph1FontSize: 'text-sm',
+  paragraph2FontSize: 'text-xs'
+};
+
+export function loadExperience(): ExperienceConfig {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.EXPERIENCE);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEYS.EXPERIENCE, JSON.stringify(DEFAULT_EXPERIENCE));
+      return DEFAULT_EXPERIENCE;
+    }
+    const val = JSON.parse(data);
+    return { ...DEFAULT_EXPERIENCE, ...val };
+  } catch (e) {
+    console.error('Failed to load experience config from storage', e);
+    return DEFAULT_EXPERIENCE;
+  }
+}
+
+export function saveExperience(config: ExperienceConfig): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.EXPERIENCE, JSON.stringify(config));
+  } catch (e) {
+    console.error('Failed to save experience config to storage', e);
+  }
+}
+
 
 

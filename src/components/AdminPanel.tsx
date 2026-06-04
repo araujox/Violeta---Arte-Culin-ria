@@ -5,7 +5,7 @@ import {
   Calendar, Clock, FileText, Image, Video, HelpCircle, ArrowLeft, ToggleLeft, ToggleRight, Heart,
   Sparkles, Gift, Search
 } from 'lucide-react';
-import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig, MenuItem } from '../types';
+import { EventBistro, HeroBanner, WhatsAppConfig, RomanticThemeConfig, SpecialCampaignConfig, MenuItem, ExperienceConfig } from '../types';
 import { handleFileUpload, getEmbedUrl } from '../utils/adminStorage';
 
 interface AdminPanelProps {
@@ -27,6 +27,8 @@ interface AdminPanelProps {
   onSaveAnoNovoTheme: (config: SpecialCampaignConfig) => void;
   menuItems: MenuItem[];
   onSaveMenuItems: (items: MenuItem[]) => void;
+  experience: ExperienceConfig;
+  onSaveExperience: (config: ExperienceConfig) => void;
   onNotify: (msg: string) => void;
 }
 
@@ -48,6 +50,8 @@ export default function AdminPanel({
   onSaveAnoNovoTheme,
   menuItems,
   onSaveMenuItems,
+  experience,
+  onSaveExperience,
   onNotify
 }: AdminPanelProps) {
   // Authentication states
@@ -58,7 +62,7 @@ export default function AdminPanel({
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Active Admin tab
-  const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic' | 'natal' | 'pascoa' | 'anonovo' | 'menu'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'banner' | 'whatsapp' | 'romantic' | 'natal' | 'pascoa' | 'anonovo' | 'menu' | 'experiencia'>('events');
 
   // Hero form inputs
   const [heroTitle, setHeroTitle] = useState(hero?.title ?? '');
@@ -66,6 +70,23 @@ export default function AdminPanel({
   const [heroImage, setHeroImage] = useState(hero?.image ?? '');
   const [heroBtnText, setHeroBtnText] = useState(hero?.buttonText ?? '');
   const [heroBtnLink, setHeroBtnLink] = useState(hero?.buttonLink ?? '');
+
+  // Experience Section form inputs
+  const [expTag, setExpTag] = useState(experience?.tag ?? '');
+  const [expTitle, setExpTitle] = useState(experience?.title ?? '');
+  const [expParagraph1, setExpParagraph1] = useState(experience?.paragraph1 ?? '');
+  const [expParagraph2, setExpParagraph2] = useState(experience?.paragraph2 ?? '');
+  const [expImage, setExpImage] = useState(experience?.image ?? '');
+  const [expStat1Value, setExpStat1Value] = useState(experience?.stat1Value ?? '');
+  const [expStat1Label, setExpStat1Label] = useState(experience?.stat1Label ?? '');
+  const [expStat2Value, setExpStat2Value] = useState(experience?.stat2Value ?? '');
+  const [expStat2Label, setExpStat2Label] = useState(experience?.stat2Label ?? '');
+  const [expStat3Value, setExpStat3Value] = useState(experience?.stat3Value ?? '');
+  const [expStat3Label, setExpStat3Label] = useState(experience?.stat3Label ?? '');
+  const [expTagFontSize, setExpTagFontSize] = useState(experience?.tagFontSize ?? 'text-xs');
+  const [expTitleFontSize, setExpTitleFontSize] = useState(experience?.titleFontSize ?? 'text-3xl md:text-5xl');
+  const [expParagraph1FontSize, setExpParagraph1FontSize] = useState(experience?.paragraph1FontSize ?? 'text-sm');
+  const [expParagraph2FontSize, setExpParagraph2FontSize] = useState(experience?.paragraph2FontSize ?? 'text-xs');
 
   // WhatsApp form inputs
   const [waNumber, setWaNumber] = useState(whatsAppConfig?.number ?? '');
@@ -162,6 +183,7 @@ export default function AdminPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const experienceInputRef = useRef<HTMLInputElement>(null);
 
   // Session check on mount
   useEffect(() => {
@@ -209,6 +231,29 @@ export default function AdminPanel({
     onNotify('Banner Principal atualizado e salvo com sucesso.');
   };
 
+  // Experience Section Actions
+  const handleSaveExperienceForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSaveExperience({
+      tag: expTag,
+      title: expTitle,
+      paragraph1: expParagraph1,
+      paragraph2: expParagraph2,
+      image: expImage,
+      stat1Value: expStat1Value,
+      stat1Label: expStat1Label,
+      stat2Value: expStat2Value,
+      stat2Label: expStat2Label,
+      stat3Value: expStat3Value,
+      stat3Label: expStat3Label,
+      tagFontSize: expTagFontSize,
+      titleFontSize: expTitleFontSize,
+      paragraph1FontSize: expParagraph1FontSize,
+      paragraph2FontSize: expParagraph2FontSize,
+    });
+    onNotify('Seção de Conceito/Experiência atualizada com sucesso!');
+  };
+
   // WhatsApp config Actions
   const handleSaveWhatsAppConfig = (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +266,7 @@ export default function AdminPanel({
   };
 
   // File upload processing function
-  const startFileUpload = (file: File, type: 'image' | 'video' | 'hero' | 'menuItem') => {
+  const startFileUpload = (file: File, type: 'image' | 'video' | 'hero' | 'menuItem' | 'experience') => {
     setIsUploading(true);
     setUploadProgress(15);
     setUploadError(null);
@@ -262,6 +307,9 @@ export default function AdminPanel({
             } else if (type === 'menuItem') {
               setMenuItemImage(base64Data);
               onNotify('Imagem do prato carregada e otimizada.');
+            } else if (type === 'experience') {
+              setExpImage(base64Data);
+              onNotify('Imagem de conceito da experiência carregada.');
             }
           }, 300);
         },
@@ -586,6 +634,14 @@ export default function AdminPanel({
               <FileText className="w-4 h-4 shrink-0" /> Editar Banner
             </button>
             <button
+              onClick={() => { setActiveTab('experiencia'); setIsEditingEvent(false); }}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'experiencia' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
+              }`}
+            >
+              <FileText className="w-4 h-4 shrink-0" /> Conceito & Experiência
+            </button>
+            <button
               onClick={() => { setActiveTab('whatsapp'); setIsEditingEvent(false); }}
               className={`flex items-center gap-2 md:gap-3 px-3.5 py-2 md:px-4 md:py-3 rounded-full md:rounded-lg text-[10px] md:text-xs uppercase tracking-wider font-semibold md:font-medium shrink-0 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'whatsapp' ? 'bg-gold-500 text-neutral-950 font-bold' : 'text-[#CCBEA3] hover:bg-[#121212] border border-gold-800/10 md:border-transparent'
@@ -668,6 +724,7 @@ export default function AdminPanel({
                 {activeTab === 'menu' && 'Cardápio Digital Violeta'}
                 {activeTab === 'events' && 'Gestão de Próximos Eventos'}
                 {activeTab === 'banner' && 'Personalizar Front Banner'}
+                {activeTab === 'experiencia' && 'Editar Conceito & Experiência'}
                 {activeTab === 'whatsapp' && 'Configurações de Integração WhatsApp'}
                 {activeTab === 'romantic' && 'Tema Especial: Dia dos Namorados'}
                 {activeTab === 'natal' && 'Tema Especial: Natal no Bistrô'}
@@ -787,7 +844,7 @@ export default function AdminPanel({
                                   {item.category}
                                 </span>
                               </div>
-                              <span className="font-mono text-xs font-bold text-gold-400 min-w-fit">R$ {item.price},00</span>
+                              <span className="font-mono text-xs font-bold text-gold-400 min-w-fit">R$ {Number(item.price || 0).toFixed(2).replace('.', ',')}</span>
                             </div>
 
                             <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">{item.description}</p>
@@ -1592,6 +1649,275 @@ export default function AdminPanel({
                   className="bg-gold-500 hover:bg-gold-400 text-neutral-950 font-bold px-8 py-3 text-xs uppercase tracking-widest rounded shadow cursor-pointer transition-all flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" /> Salvar Alterações do Banner
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* TAB: CONCEITO & EXPERIÊNCIA */}
+          {activeTab === 'experiencia' && (
+            <form onSubmit={handleSaveExperienceForm} className="space-y-6 bg-[#0c0c0c] border border-gold-800/15 rounded-xl p-6 lg:p-8">
+              
+              <div className="space-y-6">
+                
+                {/* Tag & Title Sizing Row Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-4 rounded-lg bg-neutral-950/60 border border-gold-800/10">
+                  <div className="md:col-span-12">
+                    <h4 className="text-[10px] text-gold-300 uppercase tracking-widest font-bold font-sans">1. Título e Tag Principal</h4>
+                  </div>
+                  
+                  <div className="space-y-1.5 md:col-span-8">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Tag Pequena (Mini-título)</label>
+                    <input 
+                      type="text" 
+                      value={expTag}
+                      onChange={(e) => setExpTag(e.target.value)}
+                      required
+                      placeholder="Ex: 01 / Conceito de Autoria"
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5 md:col-span-4">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans font-sans">Tamanho da Tag</label>
+                    <select
+                      value={expTagFontSize}
+                      onChange={(e) => setExpTagFontSize(e.target.value)}
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-xs text-white focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="text-[9px]">Muito Pequeno (9px)</option>
+                      <option value="text-xs">Padrão Violeta (xs)</option>
+                      <option value="text-sm">Médio (sm)</option>
+                      <option value="text-base">Legível (base)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-8">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Título Principal da Seção</label>
+                    <textarea 
+                      value={expTitle}
+                      onChange={(e) => setExpTitle(e.target.value)}
+                      required
+                      rows={2}
+                      placeholder="Ex: A Fusão do Clássico&#10;com a Sensibilidade"
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-4">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Tamanho do Título</label>
+                    <select
+                      value={expTitleFontSize}
+                      onChange={(e) => setExpTitleFontSize(e.target.value)}
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-xs text-white focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="text-2xl">Discreto (2xl)</option>
+                      <option value="text-3xl">Pequeno (3xl)</option>
+                      <option value="text-4xl">Moderado (4xl)</option>
+                      <option value="text-3xl md:text-5xl">Elegante Suntuoso (Padrão 5xl)</option>
+                      <option value="text-4xl md:text-6xl">Destacado Amplo (6xl)</option>
+                      <option value="text-5xl md:text-7xl">Monumental (7xl)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Paragraphs 1 & 2 Text blocks with selectors */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-4 rounded-lg bg-neutral-950/60 border border-gold-800/10">
+                  <div className="md:col-span-12">
+                    <h4 className="text-[10px] text-gold-300 uppercase tracking-widest font-bold font-sans">2. Parágrafos Narrativos</h4>
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-8">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Parágrafo Principal de Conceito</label>
+                    <textarea 
+                      value={expParagraph1}
+                      onChange={(e) => setExpParagraph1(e.target.value)}
+                      required
+                      rows={4}
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-4">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Tamanho do Parágrafo 1</label>
+                    <select
+                      value={expParagraph1FontSize}
+                      onChange={(e) => setExpParagraph1FontSize(e.target.value)}
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-xs text-white focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="text-xs">Fino (xs)</option>
+                      <option value="text-sm">Harmônico (Padrão sm)</option>
+                      <option value="text-base">Legível Confortável (base)</option>
+                      <option value="text-lg">Texto Amplo (lg)</option>
+                      <option value="text-xl">Enfático (xl)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-8">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Parágrafo Secundário (Destaque Itálico)</label>
+                    <textarea 
+                      value={expParagraph2}
+                      onChange={(e) => setExpParagraph2(e.target.value)}
+                      rows={3}
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-sm text-white focus:outline-none transition-colors font-light leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-4">
+                    <label className="text-[10px] text-neutral-400 uppercase tracking-widest font-semibold font-sans">Tamanho do Parágrafo 2</label>
+                    <select
+                      value={expParagraph2FontSize}
+                      onChange={(e) => setExpParagraph2FontSize(e.target.value)}
+                      className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-3 text-xs text-white focus:outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="text-[10px]">Muito Pequeno (10px)</option>
+                      <option value="text-xs">Tênue (Padrão xs)</option>
+                      <option value="text-sm">Regular (sm)</option>
+                      <option value="text-base">Clássico (base)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Local Image Upload & URL input */}
+                <div className="p-4 bg-[#121212] rounded border border-gold-800/20 space-y-3">
+                  <div>
+                    <h4 className="text-[10px] text-gold-300 uppercase tracking-widest font-bold font-sans">Imagem Conceito (Ambiente)</h4>
+                    <p className="text-[9px] text-neutral-500 mt-0.5 font-light">Informe o URL da foto ou carregue um arquivo gráfico local em alta definição do ambiente.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <div className="md:col-span-8 space-y-2">
+                      <input 
+                        type="text" 
+                        value={expImage}
+                        onChange={(e) => setExpImage(e.target.value)}
+                        placeholder="Insira o URL (ex: /cardapio/ambiente vl.png)"
+                        className="w-full bg-[#0a0a0a] border border-gold-800/10 focus:border-gold-400 rounded p-2.5 text-xs text-white focus:outline-none font-light"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-[#8E8376] uppercase tracking-wider font-semibold font-sans">Ou Suba uma Foto Local</span>
+                        <button
+                          type="button"
+                          onClick={() => experienceInputRef.current?.click()}
+                          className="bg-neutral-900 border border-gold-800/10 flex items-center gap-1.5 px-3 py-1 rounded text-[9px] text-gold-300 uppercase font-bold tracking-wider hover:border-gold-400 transition-colors cursor-pointer"
+                        >
+                          <Upload className="w-3 h-3" /> Carregar Arquivo
+                        </button>
+                        <input 
+                          type="file"
+                          ref={experienceInputRef}
+                          accept="image/*"
+                          onChange={(e) => {
+                            const selected = e.target.files?.[0];
+                            if (selected) startFileUpload(selected, 'experience');
+                          }}
+                          className="hidden"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Image preview */}
+                    <div className="md:col-span-4 flex justify-center">
+                      <div className="w-full h-24 rounded overflow-hidden border border-gold-800/20 bg-black flex items-center justify-center relative shadow-inner">
+                        {expImage ? (
+                          <img src={expImage} alt="Preview Conceito" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <span className="text-[8px] text-[#8E8376] uppercase tracking-wider font-sans">Sem Imagem</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Statistics block */}
+                <div className="p-4 bg-neutral-950 rounded border border-gold-800/10 space-y-4">
+                  <h4 className="text-[10px] text-gold-300 uppercase tracking-widest font-bold font-sans">Colunas de Estatísticas / Destaques</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Stat 1 */}
+                    <div className="space-y-3 border-r border-gold-800/15 pr-0 md:pr-4 last:border-0 last:pr-0">
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold font-sans">Destaque 1 (Valor)</label>
+                        <input 
+                          type="text" 
+                          value={expStat1Value}
+                          onChange={(e) => setExpStat1Value(e.target.value)}
+                          placeholder="Ex: 100%"
+                          className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold font-sans">Destaque 1 (Descrição)</label>
+                        <input 
+                          type="text" 
+                          value={expStat1Label}
+                          onChange={(e) => setExpStat1Label(e.target.value)}
+                          placeholder="Ex: Ingredientes Frescos"
+                          className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stat 2 */}
+                    <div className="space-y-3 border-r border-gold-800/15 pr-0 md:pr-4 last:border-0 last:pr-0">
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold font-sans">Destaque 2 (Valor)</label>
+                        <input 
+                          type="text" 
+                          value={expStat2Value}
+                          onChange={(e) => setExpStat2Value(e.target.value)}
+                          placeholder="Ex: Autoral"
+                          className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold font-sans">Destaque 2 (Descrição)</label>
+                        <input 
+                          type="text" 
+                          value={expStat2Label}
+                          onChange={(e) => setExpStat2Label(e.target.value)}
+                          placeholder="Ex: Menu Sazonal"
+                          className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stat 3 */}
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold font-sans">Destaque 3 (Valor)</label>
+                        <input 
+                          type="text" 
+                          value={expStat3Value}
+                          onChange={(e) => setExpStat3Value(e.target.value)}
+                          placeholder="Ex: VIP"
+                          className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold font-sans">Destaque 3 (Descrição)</label>
+                        <input 
+                          type="text" 
+                          value={expStat3Label}
+                          onChange={(e) => setExpStat3Label(e.target.value)}
+                          placeholder="Ex: Atendimento Reservado"
+                          className="w-full bg-[#121212] border border-gold-800/20 focus:border-gold-400 rounded p-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Submission buttons */}
+              <div className="flex gap-4 justify-end pt-4 border-t border-gold-800/10">
+                <button
+                  type="submit"
+                  className="bg-gold-500 hover:bg-gold-400 text-neutral-950 font-bold px-8 py-3 text-xs uppercase tracking-widest rounded shadow cursor-pointer transition-all flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" /> Salvar Seção de Experiência
                 </button>
               </div>
             </form>

@@ -58,7 +58,7 @@ export default function FullMenuSection({ menuItems, whatsAppConfig, onItemClick
     } else {
       const phone = whatsAppConfig?.number || "5581988070000";
       const cleanPhone = phone.replace(/\D/g, '');
-      const message = `Olá! Gostaria de fazer uma reserva de mesa e incluir este prato em nossa noite: *${item.name}* (R$ ${item.price.toFixed(2)})!`;
+      const message = `Olá! Gostaria de fazer uma reserva de mesa e incluir este prato em nossa noite: *${item.name}* (R$ ${item.price.toFixed(2).replace('.', ',')})!`;
       const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
     }

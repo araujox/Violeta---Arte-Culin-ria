@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WINE_ITEMS, WineItem } from '../utils/menuAndWineData';
 import { WhatsAppConfig } from '../types';
-import { Wine, Award, Star, Globe, Shield, Sparkles, Compass } from 'lucide-react';
+import { Wine, Award, Star, Globe, Shield, Sparkles, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
 
 interface WineCellarSectionProps {
@@ -20,7 +20,9 @@ const CATEGORIES = [
 
 export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [currentMobileIndex, setCurrentMobileIndex] = useState<number>(0);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const filteredWines = WINE_ITEMS.filter(wine => {
     if (activeCategory === 'all') return true;
@@ -30,9 +32,53 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
   const handleOrderWine = (wine: WineItem) => {
     const phone = whatsAppConfig?.number || "5581988070000";
     const cleanPhone = phone.replace(/\D/g, '');
-    const message = `Olá! Gostaria de reservar uma mesa e incluir em nosso jantar um rótulo especial de vinho: *${wine.name}* (${wine.country} ${wine.flag}) de R$ ${wine.price.toFixed(2)}!`;
+    const message = `Olá! Gostaria de reservar uma mesa e incluir em nosso jantar um rótulo especial de vinho: *${wine.name}* (${wine.country} ${wine.flag}) de R$ ${wine.price.toFixed(2).replace('.', ',')}!`;
     const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
+  };
+
+  // Reset scroll and index when active tab changes
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = 0;
+    }
+    setCurrentMobileIndex(0);
+  }, [activeCategory]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const scrollLeft = container.scrollLeft;
+    const cardWidth = container.scrollWidth / filteredWines.length;
+    if (cardWidth > 0) {
+      const newIndex = Math.round(scrollLeft / cardWidth);
+      if (newIndex !== currentMobileIndex && newIndex >= 0 && newIndex < filteredWines.length) {
+        setCurrentMobileIndex(newIndex);
+      }
+    }
+  };
+
+  const scrollToMobileIndex = (index: number) => {
+    if (scrollRef.current && filteredWines.length > 0) {
+      const container = scrollRef.current;
+      const cardWidth = container.scrollWidth / filteredWines.length;
+      container.scrollTo({
+        left: index * cardWidth,
+        behavior: 'smooth'
+      });
+      setCurrentMobileIndex(index);
+    }
+  };
+
+  const handleNextMobile = () => {
+    if (filteredWines.length <= 1) return;
+    const nextIndex = (currentMobileIndex + 1) % filteredWines.length;
+    scrollToMobileIndex(nextIndex);
+  };
+
+  const handlePrevMobile = () => {
+    if (filteredWines.length <= 1) return;
+    const prevIndex = (currentMobileIndex - 1 + filteredWines.length) % filteredWines.length;
+    scrollToMobileIndex(prevIndex);
   };
 
   return (
@@ -88,19 +134,20 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
           </div>
         </div>
 
-        {/* Vintage Wines Grid */}
+        {/* Vintage Wines Grid / Mobile Carousel */}
         <div className="min-h-[400px]">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.35 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8"
-            >
-              {filteredWines.map((wine, index) => {
-                return (
+            <div key={activeCategory} className="space-y-6">
+              
+              {/* DESKTOP GRID VIEW - Hidden on small mobile screens */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35 }}
+                className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8"
+              >
+                {filteredWines.map((wine, index) => (
                   <motion.div
                     key={wine.id}
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -112,7 +159,6 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
                   >
                     {/* Bottle Visual Area */}
                     <div className="h-72 relative bg-gradient-to-b from-[#150d10] to-[#070506] overflow-hidden flex items-center justify-center p-4 rounded-t-2xl">
-                      {/* Premium burgundy radial backlit spotlight glow */}
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(114,28,41,0.25)_0%,transparent_65%)] z-0 pointer-events-none"></div>
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0e0a0b] via-transparent to-transparent z-10"></div>
                       
@@ -124,13 +170,11 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
                         referrerPolicy="no-referrer"
                       />
 
-                      {/* Flag Indicator badge */}
                       <span className="absolute top-4 right-4 bg-black/75 backdrop-blur-sm border border-gold-800/20 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 z-20 font-mono text-white">
                         <span>{wine.flag}</span>
                         <span className="text-[10px] uppercase font-semibold tracking-wider">{wine.country}</span>
                       </span>
 
-                      {/* Center subtle glowing emblem */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
                         <div className="w-12 h-12 rounded-full border border-gold-400/40 bg-black/80 flex items-center justify-center shadow-lg shadow-gold-500/10">
                           <Wine className="w-5 h-5 text-gold-400 animate-pulse" />
@@ -144,7 +188,6 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
                         <p className="text-[#8E8376] text-[9px] font-mono tracking-[0.25em] uppercase">
                           {wine.category === 'espumantes' ? 'Élixir Espumante' : `Safra de Estima`}
                         </p>
-                        
                         <h4 className="font-serif text-[14px] md:text-base text-[#FCFBF8] leading-snug group-hover:text-gold-300 transition-colors">
                           {wine.name}
                         </h4>
@@ -162,11 +205,120 @@ export default function WineCellarSection({ whatsAppConfig }: WineCellarSectionP
                         </span>
                       </div>
                     </div>
-
                   </motion.div>
-                );
-              })}
-            </motion.div>
+                ))}
+              </motion.div>
+
+              {/* MOBILE CAROUSEL VIEW - Horizontal slide with scroll snapping */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="block sm:hidden relative w-full"
+              >
+                {/* Horizontal scroll window */}
+                <div 
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  className="flex gap-5 overflow-x-auto snap-x snap-mandatory py-4 px-[8%] scrollbar-none scroll-smooth"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {filteredWines.map((wine) => (
+                    <div 
+                      key={`mobile-${wine.id}`}
+                      onClick={() => handleOrderWine(wine)}
+                      className="w-[84vw] max-w-[300px] snap-center shrink-0 flex flex-col justify-between bg-[#0e0a0b]/95 rounded-2xl overflow-hidden border border-gold-800/20 active:border-gold-400/35 transition-all duration-300 shadow-2xl shadow-[#1f050b]/40 relative"
+                    >
+                      {/* Bottle Visual Area */}
+                      <div className="h-64 relative bg-gradient-to-b from-[#150d10] to-[#070506] overflow-hidden flex items-center justify-center p-4 rounded-t-2xl">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(114,28,41,0.22)_0%,transparent_65%)] z-0 pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0a0b] via-transparent to-transparent z-10"></div>
+                        
+                        <ImageWithFallback 
+                          itemName={wine.name}
+                          fallbackSrc={wine.image} 
+                          alt={wine.name} 
+                          className="h-full max-h-52 w-auto object-contain relative z-15"
+                          referrerPolicy="no-referrer"
+                        />
+
+                        {/* Country flag */}
+                        <span className="absolute top-3 right-3 bg-black/80 backdrop-blur-xs border border-gold-800/20 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 z-20 font-mono text-white">
+                          <span>{wine.flag}</span>
+                          <span className="text-[8px] uppercase font-semibold tracking-wider">{wine.country}</span>
+                        </span>
+                      </div>
+
+                      {/* Info Area */}
+                      <div className="p-4 flex flex-col flex-1 justify-between bg-[#090607]">
+                        <div className="space-y-1">
+                          <p className="text-[#8E8376] text-[8px] font-mono tracking-wider uppercase">
+                            {wine.category === 'espumantes' ? 'Élixir Espumante' : `Safra de Estima`}
+                          </p>
+                          <h4 className="font-serif text-sm text-[#FCFBF8] leading-snug">
+                            {wine.name}
+                          </h4>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-gold-800/10 flex justify-between items-end">
+                          <div>
+                            <p className="text-[7px] text-[#555] uppercase tracking-wider">Garrafa</p>
+                            <p className="font-mono text-xs font-bold text-gold-400 mt-0.5">
+                              R$ {wine.price.toFixed(2).replace('.', ',')}
+                            </p>
+                          </div>
+                          <span className="text-[8px] font-bold tracking-widest text-[#C19A5B] uppercase flex items-center gap-1">
+                            Escolher <Compass className="w-2 h-2" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Carousel Controls HUD (Arrows and Dots indicator combined) */}
+                {filteredWines.length > 1 && (
+                  <div className="flex items-center justify-between px-4 mt-2">
+                    {/* Previous Button */}
+                    <button
+                      type="button"
+                      onClick={handlePrevMobile}
+                      aria-label="Anterior"
+                      className="w-10 h-10 rounded-full bg-[#120a0d] border border-gold-800/30 flex items-center justify-center text-gold-400 active:bg-gold-500 active:text-neutral-950 transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    {/* Pagination Dots */}
+                    <div className="flex gap-1.5 items-center justify-center">
+                      {filteredWines.map((_, idx) => (
+                        <button
+                          key={`dot-${idx}`}
+                          type="button"
+                          onClick={() => scrollToMobileIndex(idx)}
+                          className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                            idx === currentMobileIndex 
+                              ? 'w-4 bg-gold-400' 
+                              : 'w-1.5 bg-gold-800/40'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      type="button"
+                      onClick={handleNextMobile}
+                      aria-label="Próximo"
+                      className="w-10 h-10 rounded-full bg-[#120a0d] border border-gold-800/30 flex items-center justify-center text-gold-400 active:bg-gold-500 active:text-neutral-950 transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+
+            </div>
           </AnimatePresence>
         </div>
 

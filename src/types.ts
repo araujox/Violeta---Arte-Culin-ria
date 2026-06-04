@@ -83,3 +83,22 @@ export interface SpecialCampaignConfig {
   endDate?: string;
 }
 
+export interface ExperienceConfig {
+  tag: string;
+  title: string;
+  paragraph1: string;
+  paragraph2: string;
+  image: string;
+  stat1Value: string;
+  stat1Label: string;
+  stat2Value: string;
+  stat2Label: string;
+  stat3Value: string;
+  stat3Label: string;
+  tagFontSize?: string;
+  titleFontSize?: string;
+  paragraph1FontSize?: string;
+  paragraph2FontSize?: string;
+}
+
+

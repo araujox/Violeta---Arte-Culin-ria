@@ -4,7 +4,7 @@ import {
   MapPin, Heart, ChevronRight, MessageSquare, Instagram, ExternalLink, Lock 
 } from 'lucide-react';
 
-import { MenuItem, EventBistro, HeroBanner, WhatsAppConfig } from './types';
+import { MenuItem, EventBistro, HeroBanner, WhatsAppConfig, ExperienceConfig } from './types';
 import { VIOLETA_MENU, HERO_IMG } from './data';
 
 import AudioAmbiance from './components/AudioAmbiance';
@@ -21,7 +21,8 @@ import {
   loadNatalTheme, saveNatalTheme,
   loadPascoaTheme, savePascoaTheme,
   loadAnoNovoTheme, saveAnoNovoTheme,
-  loadMenu, saveMenu
+  loadMenu, saveMenu,
+  loadExperience, saveExperience
 } from './utils/adminStorage';
 import EventsSection from './components/EventsSection';
 import AdminPanel from './components/AdminPanel';
@@ -228,6 +229,7 @@ export default function App() {
   const [natalTheme, setNatalTheme] = useState(() => loadNatalTheme());
   const [pascoaTheme, setPascoaTheme] = useState(() => loadPascoaTheme());
   const [anoNovoTheme, setAnoNovoTheme] = useState(() => loadAnoNovoTheme());
+  const [experience, setExperience] = useState<ExperienceConfig>(() => loadExperience());
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => loadMenu());
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
@@ -283,6 +285,11 @@ export default function App() {
   const handleSaveAnoNovoTheme = (newConfig: any) => {
     setAnoNovoTheme(newConfig);
     saveAnoNovoTheme(newConfig);
+  };
+
+  const handleSaveExperience = (newConfig: ExperienceConfig) => {
+    setExperience(newConfig);
+    saveExperience(newConfig);
   };
 
   const triggerNotification = (text: string) => {
@@ -452,30 +459,38 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           <div className="lg:col-span-5 space-y-6">
-            <span className="text-xs uppercase tracking-widest text-[#B59C66] font-semibold">01 / Conceito de Autoria</span>
-            <h3 className="font-serif text-3xl md:text-5xl text-[#FCFBF8] tracking-wide leading-tight">
-              A Fusão do Clássico <br />com a Sensibilidade
+            <span className={`${experience.tagFontSize || 'text-xs'} uppercase tracking-widest text-[#B59C66] font-semibold`}>{experience.tag}</span>
+            <h3 className={`font-serif ${experience.titleFontSize || 'text-3xl md:text-5xl'} text-[#FCFBF8] tracking-wide leading-tight whitespace-pre-line`}>
+              {experience.title}
             </h3>
-            <p className="text-[#BCAFA3] text-sm leading-relaxed text-justify">
-              O <strong>Violeta - Arte Culinária</strong> nasce da paixão de traduzir ingredientes regionais nobres em quadros comestíveis. Em nosso espaço acolhedor e intimista, cada prato é uma expressão poética inspirada em técnicas de redução e caramelização contemporâneas.
+            <p className={`text-[#BCAFA3] ${experience.paragraph1FontSize || 'text-sm'} leading-relaxed text-justify whitespace-pre-line`}>
+              {experience.paragraph1}
             </p>
-            <p className="text-[#8E8376] text-xs italic leading-relaxed">
-              Trabalhamos com cortes nobres como o Ancho Angus, risotos emulsificados com queijo mascarpone e flores comestíveis que homenageiam o tom violeta de nossa marca. Em harmonia com as luzes de velas e o silêncio suntuoso, sua visita se torna inesquecível.
-            </p>
+            {experience.paragraph2 && (
+              <p className={`text-[#8E8376] ${experience.paragraph2FontSize || 'text-xs'} italic leading-relaxed whitespace-pre-line`}>
+                {experience.paragraph2}
+              </p>
+            )}
             
             <div className="pt-4 flex gap-8">
-              <div>
-                <h4 className="font-serif text-2xl text-gold-400 font-bold">100%</h4>
-                <p className="text-[10px] text-[#A89F8F] uppercase tracking-wider">Ingredientes Frescos</p>
-              </div>
-              <div className="border-l border-gold-800/30 pl-8">
-                <h4 className="font-serif text-2xl text-gold-400 font-bold">Autoral</h4>
-                <p className="text-[10px] text-[#A89F8F] uppercase tracking-wider">Menu Sazonal</p>
-              </div>
-              <div className="border-l border-gold-800/30 pl-8">
-                <h4 className="font-serif text-2xl text-gold-400 font-bold">VIP</h4>
-                <p className="text-[10px] text-[#A89F8F] uppercase tracking-wider">Atendimento Reservado</p>
-              </div>
+              {experience.stat1Value && (
+                <div>
+                  <h4 className="font-serif text-2xl text-gold-400 font-bold">{experience.stat1Value}</h4>
+                  <p className="text-[10px] text-[#A89F8F] uppercase tracking-wider">{experience.stat1Label}</p>
+                </div>
+              )}
+              {experience.stat2Value && (
+                <div className="border-l border-gold-800/30 pl-8">
+                  <h4 className="font-serif text-2xl text-gold-400 font-bold">{experience.stat2Value}</h4>
+                  <p className="text-[10px] text-[#A89F8F] uppercase tracking-wider">{experience.stat2Label}</p>
+                </div>
+              )}
+              {experience.stat3Value && (
+                <div className="border-l border-gold-800/30 pl-8">
+                  <h4 className="font-serif text-2xl text-gold-400 font-bold">{experience.stat3Value}</h4>
+                  <p className="text-[10px] text-[#A89F8F] uppercase tracking-wider">{experience.stat3Label}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -488,7 +503,7 @@ export default function App() {
 
             <div className="md:col-span-8 group relative overflow-hidden rounded-lg gold-gradient-border shadow-xl">
               <img 
-                src="/cardapio/ambiente vl.png" 
+                src={experience.image} 
                 alt="Ambiente Violeta - Arte Culinária" 
                 className="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"
@@ -696,7 +711,7 @@ export default function App() {
                   <h4 className="font-serif text-xl text-[#FCFBF8] tracking-wide">{selectedMenuItem.name}</h4>
                   <p className="text-[10px] uppercase text-gold-400 tracking-wider font-semibold mt-0.5">{selectedMenuItem.category}</p>
                 </div>
-                <span className="font-serif text-lg text-gold-400 font-bold shrink-0">R$ {selectedMenuItem.price}</span>
+                <span className="font-serif text-lg text-gold-400 font-bold shrink-0">R$ {Number(selectedMenuItem.price || 0).toFixed(2).replace('.', ',')}</span>
               </div>
 
               <div className="border-t border-b border-gold-800/10 py-3">
@@ -850,6 +865,8 @@ export default function App() {
           onSaveAnoNovoTheme={handleSaveAnoNovoTheme}
           menuItems={menuItems}
           onSaveMenuItems={handleSaveMenuItems}
+          experience={experience}
+          onSaveExperience={handleSaveExperience}
           onNotify={triggerNotification}
         />
       )}
