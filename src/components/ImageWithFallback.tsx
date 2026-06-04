@@ -246,6 +246,7 @@ export default function ImageWithFallback({ itemName, fallbackSrc, className, ..
       src={currentSrc}
       className={className}
       onError={handleError}
+      loading="lazy"
       {...props}
     />
   );
