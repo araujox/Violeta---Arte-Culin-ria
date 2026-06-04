@@ -592,7 +592,13 @@ export default function App() {
           {/* Grid Layout Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {menuItems
-              .filter(item => item.category === activeMenuTab)
+              .filter(item => {
+                if (activeMenuTab === 'principais') {
+                  const mainCategories = ['risotos', 'massas', 'parmegiana', 'principais'];
+                  return mainCategories.includes(item.category);
+                }
+                return item.category === activeMenuTab;
+              })
               .map((item) => (
                 <div 
                   key={item.id} 
