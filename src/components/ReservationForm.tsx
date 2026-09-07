@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ATMOSPHERES_VIOLETA } from '../data';
 import { Calendar, Clock, Users, Check, Sparkles, Send, Coffee } from 'lucide-react';
 import { WhatsAppConfig } from '../types';
+import { createReservationInSupabase } from '../utils/supabaseService';
 
 interface ReservationFormProps {
   whatsAppConfig?: WhatsAppConfig;
@@ -113,6 +114,21 @@ export default function ReservationForm({ whatsAppConfig, onNotify }: Reservatio
 
     setTicketIssued(bookingObject);
     onNotify("Informações geradas! Encaminhando a confirmação para o WhatsApp oficial...");
+
+    // Salvar reserva no Supabase
+    createReservationInSupabase({
+      code: bookingCode,
+      name: guestName,
+      email: guestEmail,
+      date: bookingDate,
+      time: bookingTime,
+      partySize: bookingPartySize,
+      atmosphere: activeAtmosphere.title,
+      tableId: selectedTable !== null ? selectedTable : "Especial",
+      tableDesc: currentTable.desc,
+      upgrades,
+      totalDepositEstimate: (50 * bookingPartySize)
+    }).catch(err => console.error('Erro ao salvar reserva no Supabase:', err));
 
     // Format WhatsApp message text
     let whatsappText = `Olá Violeta - Arte Culinária! Gostaria de efetuar uma reserva:\n\n` +

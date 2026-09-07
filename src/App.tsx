@@ -24,6 +24,14 @@ import {
   loadMenu, saveMenu,
   loadExperience, saveExperience
 } from './utils/adminStorage';
+import {
+  getEventsFromSupabase,
+  saveEventsToSupabase,
+  getMenuFromSupabase,
+  saveMenuToSupabase,
+  getSettingFromSupabase,
+  saveSettingToSupabase
+} from './utils/supabaseService';
 import EventsSection from './components/EventsSection';
 import AdminPanel from './components/AdminPanel';
 import RomanticPopup from './components/RomanticPopup';
@@ -233,6 +241,76 @@ export default function App() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => loadMenu());
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
+  // Carregar dados atualizados do Supabase no carregamento inicial
+  useEffect(() => {
+    async function syncFromSupabase() {
+      try {
+        const [
+          remoteEvents,
+          remoteMenu,
+          remoteHero,
+          remoteWhatsApp,
+          remoteRomantic,
+          remoteNatal,
+          remotePascoa,
+          remoteAnoNovo,
+          remoteExperience
+        ] = await Promise.all([
+          getEventsFromSupabase(),
+          getMenuFromSupabase(),
+          getSettingFromSupabase<HeroBanner>('hero'),
+          getSettingFromSupabase<WhatsAppConfig>('whatsapp'),
+          getSettingFromSupabase<any>('romantic_theme'),
+          getSettingFromSupabase<any>('natal_theme'),
+          getSettingFromSupabase<any>('pascoa_theme'),
+          getSettingFromSupabase<any>('anonovo_theme'),
+          getSettingFromSupabase<ExperienceConfig>('experience')
+        ]);
+
+        if (remoteEvents && remoteEvents.length > 0) {
+          setEvents(remoteEvents);
+          saveEvents(remoteEvents);
+        }
+        if (remoteMenu && remoteMenu.length > 0) {
+          setMenuItems(remoteMenu);
+          saveMenu(remoteMenu);
+        }
+        if (remoteHero) {
+          setHero(remoteHero);
+          saveHero(remoteHero);
+        }
+        if (remoteWhatsApp) {
+          setWhatsAppConfig(remoteWhatsApp);
+          saveWhatsApp(remoteWhatsApp);
+        }
+        if (remoteRomantic) {
+          setRomanticTheme(remoteRomantic);
+          saveRomanticTheme(remoteRomantic);
+        }
+        if (remoteNatal) {
+          setNatalTheme(remoteNatal);
+          saveNatalTheme(remoteNatal);
+        }
+        if (remotePascoa) {
+          setPascoaTheme(remotePascoa);
+          savePascoaTheme(remotePascoa);
+        }
+        if (remoteAnoNovo) {
+          setAnoNovoTheme(remoteAnoNovo);
+          saveAnoNovoTheme(remoteAnoNovo);
+        }
+        if (remoteExperience) {
+          setExperience(remoteExperience);
+          saveExperience(remoteExperience);
+        }
+      } catch (err) {
+        console.error('Erro na sincronização inicial do Supabase:', err);
+      }
+    }
+
+    syncFromSupabase();
+  }, []);
+
   // Monitor location hashes for hidden navigation entries
   useEffect(() => {
     const handleLocationHash = () => {
@@ -250,46 +328,55 @@ export default function App() {
   const handleSaveEvents = (newEvents: EventBistro[]) => {
     setEvents(newEvents);
     saveEvents(newEvents);
+    saveEventsToSupabase(newEvents);
   };
 
   const handleSaveMenuItems = (newMenuItems: MenuItem[]) => {
     setMenuItems(newMenuItems);
     saveMenu(newMenuItems);
+    saveMenuToSupabase(newMenuItems);
   };
 
   const handleSaveHero = (newHero: HeroBanner) => {
     setHero(newHero);
     saveHero(newHero);
+    saveSettingToSupabase('hero', newHero);
   };
 
   const handleSaveWhatsApp = (newConfig: WhatsAppConfig) => {
     setWhatsAppConfig(newConfig);
     saveWhatsApp(newConfig);
+    saveSettingToSupabase('whatsapp', newConfig);
   };
 
   const handleSaveRomanticTheme = (newConfig: any) => {
     setRomanticTheme(newConfig);
     saveRomanticTheme(newConfig);
+    saveSettingToSupabase('romantic_theme', newConfig);
   };
 
   const handleSaveNatalTheme = (newConfig: any) => {
     setNatalTheme(newConfig);
     saveNatalTheme(newConfig);
+    saveSettingToSupabase('natal_theme', newConfig);
   };
 
   const handleSavePascoaTheme = (newConfig: any) => {
     setPascoaTheme(newConfig);
     savePascoaTheme(newConfig);
+    saveSettingToSupabase('pascoa_theme', newConfig);
   };
 
   const handleSaveAnoNovoTheme = (newConfig: any) => {
     setAnoNovoTheme(newConfig);
     saveAnoNovoTheme(newConfig);
+    saveSettingToSupabase('anonovo_theme', newConfig);
   };
 
   const handleSaveExperience = (newConfig: ExperienceConfig) => {
     setExperience(newConfig);
     saveExperience(newConfig);
+    saveSettingToSupabase('experience', newConfig);
   };
 
   const triggerNotification = (text: string) => {
